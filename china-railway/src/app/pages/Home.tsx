@@ -79,7 +79,7 @@ export default function Home() {
       
       {/* Track with Train */}
       <Track 
-        className="absolute bottom-20"
+        className="absolute bottom-100"
         train={
           (locoLoading || carLoading) ? (
             <div className="text-white">Loading train...</div>

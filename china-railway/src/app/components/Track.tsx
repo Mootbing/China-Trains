@@ -32,13 +32,13 @@ const Track: React.FC<TrackProps> = ({
     <div className={`w-full relative ${className}`}>
       {/* Train positioned above or below the track */}
       {train && (
-        <div className={`w-full flex justify-center relative z-10 bottom-25`}>
+        <div className={`w-full flex justify-center relative z-10`}>
           {train}
         </div>
       )}
       
       {/* Track */}
-      <div className="h-8 relative overflow-hidden z-0">
+      <div className="relative overflow-hidden z-0">
         <div className="flex h-full">
           {/* Repeat the rail image horizontally */}
           {Array.from({ length: numRails }, (_, index) => (

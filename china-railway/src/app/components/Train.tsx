@@ -27,7 +27,7 @@ const Train: React.FC<TrainProps> = ({
       className={`flex items-end ${className}`} 
       style={{ 
         gap: `${spacing}px`,
-        transform: `scale(${scale}) translateY(-50%)`,
+        transform: `scale(${scale})`,
         transformOrigin: 'center'
       }}
     >
