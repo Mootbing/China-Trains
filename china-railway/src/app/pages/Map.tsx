@@ -28,26 +28,93 @@ export default function Map() {
             zoom: 5,
             mapTypeId: google.maps.MapTypeId.ROADMAP,
             styles: [
+              // Hide all features except text labels
+              // {
+              //   featureType: 'all',
+              //   elementType: 'geometry',
+              //   stylers: [{ visibility: 'off' }]
+              // },
+              // {
+              //   featureType: 'all',
+              //   elementType: 'geometry.fill',
+              //   stylers: [{ visibility: 'off' }]
+              // },
+              // {
+              //   featureType: 'all',
+              //   elementType: 'geometry.stroke',
+              //   stylers: [{ visibility: 'off' }]
+              // },
+              {
+                featureType: 'all',
+                elementType: 'labels.icon',
+                stylers: [{ visibility: 'off' }]
+              },
               {
                 featureType: 'all',
                 elementType: 'labels.text.fill',
-                stylers: [{ color: '#7c93a3' }, { lightness: -10 }]
+                stylers: [{ color: '#ffffff' }]
               },
               {
-                featureType: 'administrative.country',
-                elementType: 'geometry.stroke',
-                stylers: [{ color: '#4b6878' }]
+                featureType: 'all',
+                elementType: 'labels.text.stroke',
+                stylers: [{ color: '#000000' }, { lightness: 0 }]
               },
-              {
-                featureType: 'water',
-                elementType: 'geometry.fill',
-                stylers: [{ color: '#0e1626' }]
-              },
-              {
-                featureType: 'water',
-                elementType: 'labels.text.fill',
-                stylers: [{ color: '#4e6d70' }]
-              }
+              // Show only administrative boundaries and labels
+              // {
+              //   featureType: 'administrative',
+              //   elementType: 'geometry.stroke',
+              //   stylers: [{ color: '#ffffff' }, { visibility: 'on' }]
+              // },
+              // {
+              //   featureType: 'administrative',
+              //   elementType: 'labels.text.fill',
+              //   stylers: [{ color: '#ffffff' }]
+              // },
+              // {
+              //   featureType: 'administrative',
+              //   elementType: 'labels.text.stroke',
+              //   stylers: [{ color: '#000000' }]
+              // },
+              // Show water bodies in dark blue
+              // {
+              //   featureType: 'water',
+              //   elementType: 'geometry.fill',
+              //   stylers: [{ color: '#1a365d' }]
+              // },
+              // {
+              //   featureType: 'water',
+              //   elementType: 'labels.text.fill',
+              //   stylers: [{ color: '#ffffff' }]
+              // },
+              // {
+              //   featureType: 'water',
+              //   elementType: 'labels.text.stroke',
+              //   stylers: [{ color: '#000000' }]
+              // },
+              // Hide roads
+              // {
+              //   featureType: 'road',
+              //   elementType: 'all',
+              //   stylers: [{ visibility: 'off' }]
+              // },
+              // // Hide transit
+              // {
+              //   featureType: 'transit',
+              //   elementType: 'all',
+              //   stylers: [{ visibility: 'off' }]
+              // },
+              // Hide points of interest
+              // {
+              //   featureType: 'poi',
+              //   elementType: 'all',
+              //   stylers: [{ visibility: 'off' }]
+              // },
+              // // Hide landscape features
+              // {
+              //   featureType: 'landscape',
+              //   elementType: 'all',
+              //   stylers: [{ visibility: 'off' }]
+              // }
             ]
           });
 
@@ -58,47 +125,42 @@ export default function Map() {
 
           // Add click listener to map
           mapInstance.addListener('click', async (event: google.maps.MapMouseEvent) => {
-            if (event.latLng && geocoderInstance) {
-              try {
-                const response = await geocoderInstance.geocode({
-                  location: event.latLng
-                });
-
-                if (response.results.length > 0) {
-                  const result = response.results[0];
-                  let locationName = 'Unknown Location';
+            if (event.latLng) {
+              // Use Places API to find nearby places
+              const service = new google.maps.places.PlacesService(mapInstance);
+              const request = {
+                location: event.latLng,
+                radius: 5000, // 5km radius
+                type: 'locality'
+              };
+              
+              service.nearbySearch(request, (results, status) => {
+                if (status === google.maps.places.PlacesServiceStatus.OK && results && results.length > 0) {
+                  // Get the closest place
+                  const closestPlace = results[0];
+                  const placeName = closestPlace.name;
                   
-                  // Try to get the most relevant location name
-                  for (const component of result.address_components) {
-                    if (component.types.includes('locality') || 
-                        component.types.includes('administrative_area_level_1') ||
-                        component.types.includes('country')) {
-                      locationName = component.long_name;
-                      break;
-                    }
-                  }
+                  alert(`Location: ${placeName}`);
                   
-                  // If no specific locality found, use the formatted address
-                  if (locationName === 'Unknown Location') {
-                    locationName = result.formatted_address;
-                  }
-
-                  alert(`Closest location: ${locationName}`);
-                  
-                  // Add a marker at the clicked location
+                  // Add a minimalistic marker at the clicked location
                   new google.maps.Marker({
                     position: event.latLng,
                     map: mapInstance,
-                    title: locationName,
-                    animation: google.maps.Animation.DROP
+                    title: placeName,
+                    animation: google.maps.Animation.DROP,
+                    icon: {
+                      path: google.maps.SymbolPath.CIRCLE,
+                      scale: 8,
+                      fillColor: '#ffffff',
+                      fillOpacity: 1,
+                      strokeColor: '#000000',
+                      strokeWeight: 2
+                    }
                   });
                 } else {
                   alert('No location found at this point');
                 }
-              } catch (error) {
-                console.error('Geocoding error:', error);
-                alert('Error finding location');
-              }
+              });
             }
           });
         }
@@ -111,7 +173,7 @@ export default function Map() {
   }, []);
 
   return (
-    <div className="h-screen w-screen">
+    <div className="h-screen w-screen bg-black">
       <div 
         ref={mapRef} 
         className="w-full h-full"
