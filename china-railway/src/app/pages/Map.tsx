@@ -5,6 +5,7 @@ import { Loader } from '@googlemaps/js-api-loader';
 import { useAuth } from '../contexts/AuthContext';
 import Dock from '../components/Dock';
 import DockButton from '../components/DockButton';
+import TopDock from '../components/TopDock';
 
 export default function Map() {
   const mapRef = useRef<HTMLDivElement>(null);
@@ -198,6 +199,8 @@ export default function Map() {
         className="w-full h-full"
         style={{ minHeight: '100vh' }}
       />
+      {/* Top Dock for player stats */}
+      <TopDock />
       {/* Dock at the bottom */}
       <Dock>
         <DockButton svgUrl="/assets/svgs/dock/trains.svg" label="trains" />
