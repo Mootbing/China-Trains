@@ -1,0 +1,123 @@
+[
+    {
+      "id": 1,
+      "en_name": "Hard Seat",
+      "loc_name": "硬座",
+      "model": "YZ",
+      "type": "passenger",
+      "weight": 48000,
+      "type_info": {
+        "seats": 120
+      }
+    },
+    {
+      "id": 2,
+      "en_name": "Soft Seat",
+      "loc_name": "软座",
+      "model": "RZ",
+      "type": "passenger",
+      "weight": 47000,
+      "type_info": {
+        "seats": 104
+      }
+    },
+    {
+      "id": 3,
+      "en_name": "Hard Sleeper",
+      "loc_name": "硬卧",
+      "model": "YW",
+      "type": "passenger",
+      "weight": 49000,
+      "type_info": {
+        "seats": 66
+      }
+    },
+    {
+      "id": 4,
+      "en_name": "Soft Sleeper",
+      "loc_name": "软卧",
+      "model": "RW",
+      "type": "passenger",
+      "weight": 50000,
+      "type_info": {
+        "seats": 36
+      }
+    },
+    {
+      "id": 5,
+      "en_name": "Deluxe Soft Sleeper",
+      "loc_name": "高级软卧",
+      "model": "GRW",
+      "type": "passenger",
+      "weight": 52000,
+      "type_info": {
+        "seats": 20
+      }
+    },
+    {
+      "id": 6,
+      "en_name": "Boxcar",
+      "loc_name": "敞车",
+      "model": "F",
+      "type": "freight",
+      "weight": 22000,
+      "type_info": {
+        "cargo_weight": 70000
+      }
+    },
+    {
+      "id": 7,
+      "en_name": "Flat Car",
+      "loc_name": "平板车",
+      "model": "S",
+      "type": "freight",
+      "weight": 23000,
+      "type_info": {
+        "cargo_weight": 70000
+      }
+    },
+    {
+      "id": 8,
+      "en_name": "Gondola",
+      "loc_name": "敞车",
+      "model": "E",
+      "type": "freight",
+      "weight": 21000,
+      "type_info": {
+        "cargo_weight": 70000
+      }
+    },
+    {
+      "id": 9,
+      "en_name": "Hopper Car",
+      "loc_name": "散粮车",
+      "model": "T",
+      "type": "freight",
+      "weight": 27000,
+      "type_info": {
+        "cargo_weight": 50000
+      }
+    },
+    {
+      "id": 10,
+      "en_name": "Tank Car",
+      "loc_name": "罐车",
+      "model": "Z",
+      "type": "freight",
+      "weight": 28000,
+      "type_info": {
+        "cargo_weight": 60000
+      }
+    },
+    {
+      "id": 11,
+      "en_name": "Container Car",
+      "loc_name": "集装箱车",
+      "model": "U",
+      "type": "freight",
+      "weight": 20000,
+      "type_info": {
+        "cargo_weight": 60000
+      }
+    }
+  ]

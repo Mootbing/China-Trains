@@ -1,0 +1,292 @@
+[
+    {
+      "id": 1,
+      "en_name": "DF",
+      "loc_name": "东风",
+      "model": "DF",
+      "max_speed": 100,
+      "max_weight": 3000000,
+      "weight": 138000,
+      "type": "diesel"
+    },
+    {
+      "id": 2,
+      "en_name": "DF4",
+      "loc_name": "东风4",
+      "model": "DF4",
+      "max_speed": 120,
+      "max_weight": 3500000,
+      "weight": 138000,
+      "type": "diesel"
+    },
+    {
+      "id": 3,
+      "en_name": "DF11",
+      "loc_name": "东风11",
+      "model": "DF11",
+      "max_speed": 170,
+      "max_weight": 2800000,
+      "weight": 138000,
+      "type": "diesel"
+    },
+    {
+      "id": 4,
+      "en_name": "DF11G",
+      "loc_name": "东风11G",
+      "model": "DF11G",
+      "max_speed": 170,
+      "max_weight": 5600000,
+      "weight": 276000,
+      "type": "diesel"
+    },
+    {
+      "id": 5,
+      "en_name": "HXD1",
+      "loc_name": "和谐1型电力机车",
+      "model": "HXD1",
+      "max_speed": 120,
+      "max_weight": 4500000,
+      "weight": 184000,
+      "type": "electric"
+    },
+    {
+      "id": 6,
+      "en_name": "HXD1D",
+      "loc_name": "和谐1D型电力机车",
+      "model": "HXD1D",
+      "max_speed": 160,
+      "max_weight": 2500000,
+      "weight": 126000,
+      "type": "electric"
+    },
+    {
+      "id": 7,
+      "en_name": "SS1",
+      "loc_name": "韶山1",
+      "model": "SS1",
+      "max_speed": 95,
+      "max_weight": 3200000,
+      "weight": 126000,
+      "type": "electric"
+    },
+    {
+      "id": 8,
+      "en_name": "SS8",
+      "loc_name": "韶山8",
+      "model": "SS8",
+      "max_speed": 170,
+      "max_weight": 1800000,
+      "weight": 88000,
+      "type": "electric"
+    },
+    {
+      "id": 9,
+      "en_name": "SS9",
+      "loc_name": "韶山9",
+      "model": "SS9",
+      "max_speed": 170,
+      "max_weight": 2800000,
+      "weight": 126000,
+      "type": "electric"
+    },
+    {
+      "id": 10,
+      "en_name": "6K",
+      "loc_name": "6K",
+      "model": "6K",
+      "max_speed": 100,
+      "max_weight": 3500000,
+      "weight": 138000,
+      "type": "electric"
+    },
+    {
+      "id": 11,
+      "en_name": "CRH1A",
+      "loc_name": "和谐1A型",
+      "model": "CRH1A",
+      "max_speed": 250,
+      "max_weight": 410000,
+      "weight": 340000,
+      "type": "electric"
+    },
+    {
+      "id": 12,
+      "en_name": "CRH1B",
+      "loc_name": "和谐1B型",
+      "model": "CRH1B",
+      "max_speed": 250,
+      "max_weight": 820000,
+      "weight": 680000,
+      "type": "electric"
+    },
+    {
+      "id": 13,
+      "en_name": "CRH1E",
+      "loc_name": "和谐1E型",
+      "model": "CRH1E",
+      "max_speed": 250,
+      "max_weight": 820000,
+      "weight": 680000,
+      "type": "electric"
+    },
+    {
+      "id": 14,
+      "en_name": "CRH2A",
+      "loc_name": "和谐2A型",
+      "model": "CRH2A",
+      "max_speed": 250,
+      "max_weight": 410000,
+      "weight": 340000,
+      "type": "electric"
+    },
+    {
+      "id": 15,
+      "en_name": "CRH2B",
+      "loc_name": "和谐2B型",
+      "model": "CRH2B",
+      "max_speed": 250,
+      "max_weight": 820000,
+      "weight": 680000,
+      "type": "electric"
+    },
+    {
+      "id": 16,
+      "en_name": "CRH2C",
+      "loc_name": "和谐2C型",
+      "model": "CRH2C",
+      "max_speed": 350,
+      "max_weight": 410000,
+      "weight": 340000,
+      "type": "electric"
+    },
+    {
+      "id": 17,
+      "en_name": "CRH2E",
+      "loc_name": "和谐2E型",
+      "model": "CRH2E",
+      "max_speed": 250,
+      "max_weight": 820000,
+      "weight": 680000,
+      "type": "electric"
+    },
+    {
+      "id": 18,
+      "en_name": "CRH3C",
+      "loc_name": "和谐3C型",
+      "model": "CRH3",
+      "max_speed": 350,
+      "max_weight": 410000,
+      "weight": 340000,
+      "type": "electric"
+    },
+    {
+      "id": 19,
+      "en_name": "CRH5A",
+      "loc_name": "和谐5A型",
+      "model": "CRH5A",
+      "max_speed": 250,
+      "max_weight": 410000,
+      "weight": 340000,
+      "type": "electric"
+    },
+    {
+      "id": 20,
+      "en_name": "CRH380A",
+      "loc_name": "和谐380A型",
+      "model": "CRH380A",
+      "max_speed": 380,
+      "max_weight": 410000,
+      "weight": 340000,
+      "type": "electric"
+    },
+    {
+      "id": 21,
+      "en_name": "CRH380B",
+      "loc_name": "和谐380B型",
+      "model": "CRH380B",
+      "max_speed": 380,
+      "max_weight": 410000,
+      "weight": 340000,
+      "type": "electric"
+    },
+    {
+      "id": 22,
+      "en_name": "CRH380C",
+      "loc_name": "和谐380C型",
+      "model": "CRH380C",
+      "max_speed": 380,
+      "max_weight": 410000,
+      "weight": 340000,
+      "type": "electric"
+    },
+    {
+      "id": 23,
+      "en_name": "CRH380D",
+      "loc_name": "和谐380D型",
+      "model": "CRH380D",
+      "max_speed": 380,
+      "max_weight": 410000,
+      "weight": 340000,
+      "type": "electric"
+    },
+    {
+      "id": 24,
+      "en_name": "CR300AF",
+      "loc_name": "复兴号CR300AF型",
+      "model": "CR300AF",
+      "max_speed": 250,
+      "max_weight": 420000,
+      "weight": 350000,
+      "type": "electric"
+    },
+    {
+      "id": 25,
+      "en_name": "CR300BF",
+      "loc_name": "复兴号CR300BF型",
+      "model": "CR300BF",
+      "max_speed": 250,
+      "max_weight": 420000,
+      "weight": 350000,
+      "type": "electric"
+    },
+    {
+      "id": 26,
+      "en_name": "CR400AF",
+      "loc_name": "复兴号CR400AF型",
+      "model": "CR400AF",
+      "max_speed": 350,
+      "max_weight": 420000,
+      "weight": 350000,
+      "type": "electric"
+    },
+    {
+      "id": 27,
+      "en_name": "CR400BF",
+      "loc_name": "复兴号CR400BF型",
+      "model": "CR400BF",
+      "max_speed": 350,
+      "max_weight": 420000,
+      "weight": 350000,
+      "type": "electric"
+    },
+    {
+      "id": 28,
+      "en_name": "CR450AF",
+      "loc_name": "复兴号CR450AF型",
+      "model": "CR450AF",
+      "max_speed": 400,
+      "max_weight": 420000,
+      "weight": 350000,
+      "type": "electric"
+    },
+    {
+      "id": 29,
+      "en_name": "CR450BF",
+      "loc_name": "复兴号CR450BF型",
+      "model": "CR450BF",
+      "max_speed": 400,
+      "max_weight": 420000,
+      "weight": 350000,
+      "type": "electric"
+    }
+  ]
