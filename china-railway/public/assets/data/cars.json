@@ -19,7 +19,7 @@
       "model": "RZ",
       "type": "passenger",
       "weight": 47000,
-      "width": 180,
+      "width": 1000,
       "type_info": {
         "seats": 104
       },
@@ -32,7 +32,7 @@
       "model": "YW",
       "type": "passenger",
       "weight": 49000,
-      "width": 200,
+      "width": 1000,
       "type_info": {
         "seats": 66
       },
@@ -45,7 +45,7 @@
       "model": "RW",
       "type": "passenger",
       "weight": 50000,
-      "width": 200,
+      "width": 1000,
       "type_info": {
         "seats": 36
       },
@@ -58,7 +58,7 @@
       "model": "GRW",
       "type": "passenger",
       "weight": 52000,
-      "width": 220,
+      "width": 1000,
       "type_info": {
         "seats": 20
       },
@@ -71,7 +71,7 @@
       "model": "F",
       "type": "freight",
       "weight": 22000,
-      "width": 160,
+      "width": 1000,
       "type_info": {
         "cargo_weight": 70000
       },
@@ -84,7 +84,7 @@
       "model": "S",
       "type": "freight",
       "weight": 23000,
-      "width": 160,
+      "width": 1000,
       "type_info": {
         "cargo_weight": 70000
       },
@@ -97,7 +97,7 @@
       "model": "E",
       "type": "freight",
       "weight": 21000,
-      "width": 160,
+      "width": 1000,
       "type_info": {
         "cargo_weight": 70000
       },
@@ -110,7 +110,7 @@
       "model": "T",
       "type": "freight",
       "weight": 27000,
-      "width": 160,
+      "width": 1000,
       "type_info": {
         "cargo_weight": 50000
       },
@@ -123,7 +123,7 @@
       "model": "Z",
       "type": "freight",
       "weight": 28000,
-      "width": 160,
+      "width": 1000,
       "type_info": {
         "cargo_weight": 60000
       },
@@ -136,7 +136,7 @@
       "model": "U",
       "type": "freight",
       "weight": 20000,
-      "width": 160,
+      "width": 1000,
       "type_info": {
         "cargo_weight": 60000
       },

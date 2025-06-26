@@ -4,19 +4,27 @@ interface TrackProps {
   className?: string;
   train?: React.ReactNode;
   trainPosition?: 'top' | 'bottom';
+  electrified?: boolean;
+  level?: number;
 }
 
 const Track: React.FC<TrackProps> = ({ 
   className = "", 
   train,
-  trainPosition = 'top'
+  electrified = true,
+  level = 0
 }) => {
 
     function recalculateNumRails() {
         setNumRails(Math.ceil(window.innerWidth / railSize));
     }
 
+    function getPantographCount() {
+        return numRails * railSize / pantographOffset + 1;
+    }
+
     const railSize = 75;
+    const pantographOffset = 350;
 
     const [numRails, setNumRails] = useState(0);
     useEffect(() => {
@@ -51,6 +59,35 @@ const Track: React.FC<TrackProps> = ({
           ))}
         </div>
       </div>
+
+    {/* Pantograph */}
+    {electrified && (<>
+        <div className="relative z-0">
+        <div className="flex h-full">
+          {/* Repeat the rail image horizontally */}
+          {Array.from({ length: getPantographCount() }, (_, index) => (
+            <img 
+              key={index}
+              src={level === 0 ? "./assets/svgs/track/pantograph.svg" : "./assets/svgs/track/pantograph-2.svg"}
+              alt="Pantograph" 
+              style={{ width: railSize, transform: `translateX(${pantographOffset * index}px) translateY(-110%)` }}
+            />
+          ))}
+        </div>
+      </div>
+      <svg className="absolute top-0 left-0 w-full h-full overflow-visible">
+        {/* draw line between each pantograph */}
+        {Array.from({ length: getPantographCount() - 1 }, (_, index) => (
+            <path 
+              key={index}
+              d={`M ${pantographOffset * index + 40} -40 Q ${pantographOffset * (index + 0.5) + 40 + railSize / 2} 20 ${pantographOffset * (index + 1) + 110} -40`}
+              stroke="white"
+              strokeWidth={1}
+              fill="none"
+            />
+          ))}
+        </svg>
+    </>)}
     </div>
   );
 };

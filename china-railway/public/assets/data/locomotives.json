@@ -7,7 +7,7 @@
       "max_speed": 100,
       "max_weight": 3000000,
       "weight": 138000,
-      "width": 280,
+      "width": 1000,
       "type": "diesel",
       "image": "assets/svgs/locomotives/DF.svg"
     },
@@ -19,7 +19,7 @@
       "max_speed": 120,
       "max_weight": 3500000,
       "weight": 138000,
-      "width": 280,
+      "width": 1000,
       "type": "diesel",
       "image": "assets/svgs/locomotives/DF4.svg"
     },
@@ -31,7 +31,7 @@
       "max_speed": 170,
       "max_weight": 2800000,
       "weight": 138000,
-      "width": 280,
+      "width": 1000,
       "type": "diesel",
       "image": "assets/svgs/locomotives/DF11.svg"
     },
@@ -43,7 +43,7 @@
       "max_speed": 170,
       "max_weight": 5600000,
       "weight": 276000,
-      "width": 320,
+      "width": 1000,
       "type": "diesel",
       "image": "assets/svgs/locomotives/DF11G.svg"
     },
@@ -67,7 +67,7 @@
       "max_speed": 160,
       "max_weight": 2500000,
       "weight": 126000,
-      "width": 260,
+      "width": 1000,
       "type": "electric",
       "image": "assets/svgs/locomotives/HXD1D.svg"
     },
@@ -79,7 +79,7 @@
       "max_speed": 95,
       "max_weight": 3200000,
       "weight": 126000,
-      "width": 280,
+      "width": 1000,
       "type": "electric",
       "image": "assets/svgs/locomotives/SS1.svg"
     },
@@ -91,7 +91,7 @@
       "max_speed": 170,
       "max_weight": 1800000,
       "weight": 88000,
-      "width": 240,
+      "width": 1000,
       "type": "electric",
       "image": "assets/svgs/locomotives/SS8.svg"
     },
@@ -103,7 +103,7 @@
       "max_speed": 170,
       "max_weight": 2800000,
       "weight": 126000,
-      "width": 280,
+      "width": 1000,
       "type": "electric",
       "image": "assets/svgs/locomotives/SS9.svg"
     },
@@ -115,7 +115,7 @@
       "max_speed": 100,
       "max_weight": 3500000,
       "weight": 138000,
-      "width": 280,
+      "width": 1000,
       "type": "electric",
       "image": "assets/svgs/locomotives/6K.svg"
     },
@@ -127,7 +127,7 @@
       "max_speed": 250,
       "max_weight": 410000,
       "weight": 340000,
-      "width": 320,
+      "width": 1000,
       "type": "electric",   
       "image": "assets/svgs/locomotives/CRH1A.svg"
     },
@@ -139,7 +139,7 @@
       "max_speed": 250,
       "max_weight": 820000,
       "weight": 680000,
-      "width": 400,
+      "width": 1000,
       "type": "electric",
       "image": "assets/svgs/locomotives/CRH1B.svg"
     },
@@ -151,7 +151,7 @@
       "max_speed": 250,
       "max_weight": 820000,
       "weight": 680000,
-      "width": 400,
+      "width": 1000,
       "type": "electric",
       "image": "assets/svgs/locomotives/CRH1E.svg"
     },
@@ -163,7 +163,7 @@
       "max_speed": 250,
       "max_weight": 410000,
       "weight": 340000,
-      "width": 320,
+      "width": 1000,
       "type": "electric",
       "image": "assets/svgs/locomotives/CRH2A.svg"
     },
@@ -175,7 +175,7 @@
       "max_speed": 250,
       "max_weight": 820000,
       "weight": 680000,
-      "width": 400,
+      "width": 1000,
       "type": "electric",
       "image": "assets/svgs/locomotives/CRH2B.svg"
     },
@@ -187,7 +187,7 @@
       "max_speed": 350,
       "max_weight": 410000,
       "weight": 340000,
-      "width": 320,
+      "width": 1000,
       "type": "electric",
       "image": "assets/svgs/locomotives/CRH2C.svg"
     },
@@ -199,7 +199,7 @@
       "max_speed": 250,
       "max_weight": 820000,
       "weight": 680000,
-      "width": 400,
+      "width": 1000,
       "type": "electric",
       "image": "assets/svgs/locomotives/CRH2E.svg"
     },
@@ -211,7 +211,7 @@
       "max_speed": 350,
       "max_weight": 410000,
       "weight": 340000,
-      "width": 320,
+      "width": 1000,
       "type": "electric",
       "image": "assets/svgs/locomotives/CRH3C.svg"
     },
@@ -223,7 +223,7 @@
       "max_speed": 250,
       "max_weight": 410000,
       "weight": 340000,
-      "width": 320,
+      "width": 1000,
       "type": "electric",
       "image": "assets/svgs/locomotives/CRH5A.svg"
     },
@@ -235,7 +235,7 @@
       "max_speed": 380,
       "max_weight": 410000,
       "weight": 340000,
-      "width": 320,
+      "width": 1000,
       "type": "electric",
       "image": "assets/svgs/locomotives/CRH380A.svg"
     },
@@ -247,7 +247,7 @@
       "max_speed": 380,
       "max_weight": 410000,
       "weight": 340000,
-      "width": 320,
+      "width": 1000,
       "type": "electric",
       "image": "assets/svgs/locomotives/CRH380B.svg"
     },
@@ -259,7 +259,7 @@
       "max_speed": 380,
       "max_weight": 410000,
       "weight": 340000,
-      "width": 320,
+      "width": 1000,
       "type": "electric",
       "image": "assets/svgs/locomotives/CRH380C.svg"
     },
@@ -271,7 +271,7 @@
       "max_speed": 380,
       "max_weight": 410000,
       "weight": 340000,
-      "width": 320,
+      "width": 1000,
       "type": "electric",
       "image": "assets/svgs/locomotives/CRH380D.svg"
     },
@@ -283,7 +283,7 @@
       "max_speed": 250,
       "max_weight": 420000,
       "weight": 350000,
-      "width": 320,
+      "width": 1000,
       "type": "electric",
       "image": "assets/svgs/locomotives/CR300AF.svg"
     },
@@ -295,7 +295,7 @@
       "max_speed": 250,
       "max_weight": 420000,
       "weight": 350000,
-      "width": 320,
+      "width": 1000,
       "type": "electric",
       "image": "assets/svgs/locomotives/CR300BF.svg"
     },
@@ -307,7 +307,7 @@
       "max_speed": 350,
       "max_weight": 420000,
       "weight": 350000,
-      "width": 320,
+      "width": 1000,
       "type": "electric",
       "image": "assets/svgs/locomotives/CR400AF.svg"
     },
@@ -319,7 +319,7 @@
       "max_speed": 350,
       "max_weight": 420000,
       "weight": 350000,
-      "width": 320,
+      "width": 1000,
       "type": "electric",
       "image": "assets/svgs/locomotives/CR400BF.svg"
     },
@@ -331,7 +331,7 @@
       "max_speed": 400,
       "max_weight": 420000,
       "weight": 350000,
-      "width": 320,
+      "width": 1000,
       "type": "electric",
       "image": "assets/svgs/locomotives/CR450AF.svg"
     },
@@ -343,7 +343,7 @@
       "max_speed": 400,
       "max_weight": 420000,
       "weight": 350000,
-      "width": 320,
+      "width": 1000,
       "type": "electric",
       "image": "assets/svgs/locomotives/CR450BF.svg"
     }

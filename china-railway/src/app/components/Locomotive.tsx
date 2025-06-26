@@ -39,13 +39,13 @@ const Locomotive: React.FC<LocomotiveProps> = ({
     >
       {/* Locomotive Image */}
       <img 
-        src={image || "/assets/svgs/locomotives/DF.svg"} 
+        src={image || "/assets/svgs/locomotives/HXD1.svg"} 
         alt={en_name || "Locomotive"}
         className="w-full h-full object-contain"
         onError={(e) => {
           // Fallback to a default image if the specified image fails to load
           const target = e.target as HTMLImageElement;
-          target.src = "/assets/svgs/locomotives/DF.svg";
+          target.src = "/assets/svgs/locomotives/HXD1.svg";
         }}
       />
       

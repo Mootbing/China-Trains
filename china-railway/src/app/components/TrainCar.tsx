@@ -40,13 +40,13 @@ const TrainCar: React.FC<TrainCarProps> = ({
     >
       {/* Train Car Image */}
       <img 
-        src={image || "/assets/images/cars/YZ.png"} 
+        src={image || "/assets/svgs/cars/YZ.png"} 
         alt={en_name || "Train Car"}
         className="w-full h-full object-contain"
         onError={(e) => {
           // Fallback to a default image if the specified image fails to load
           const target = e.target as HTMLImageElement;
-          target.src = "/assets/images/cars/YZ.png";
+          target.src = "/assets/svgs/cars/YZ.png";
         }}
       />
       

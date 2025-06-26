@@ -24,7 +24,7 @@ export default function Home() {
   const trainConsist = [];
   if (locomotive) trainConsist.push(locomotive);
   if (car) trainConsist.push(car);
-  if (car) trainConsist.push(car); // Add another car for demonstration
+//   if (car) trainConsist.push(car); // Add another car for demonstration
 
   const handleTrainItemClick = (item: any, index: number) => {
     console.log(`Clicked ${item.en_name} at position ${index}`);
