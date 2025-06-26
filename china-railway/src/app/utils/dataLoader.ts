@@ -7,6 +7,7 @@ export interface Locomotive {
   max_speed: number;
   max_weight: number;
   weight: number;
+  width: number;
   type: 'electric' | 'diesel' | 'steam';
   image: string;
 }
@@ -18,6 +19,7 @@ export interface Car {
   model: string;
   type: 'passenger' | 'freight';
   weight: number;
+  width: number;
   type_info: {
     seats?: number;
     cargo_weight?: number;

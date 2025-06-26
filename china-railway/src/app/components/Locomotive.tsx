@@ -8,10 +8,10 @@ interface LocomotiveProps {
   max_speed?: number;
   max_weight?: number;
   weight?: number;
+  width?: number;
   type?: 'electric' | 'diesel' | 'steam';
   image?: string;
   className?: string;
-  width?: number;
   height?: number;
   onClick?: () => void;
 }
@@ -24,10 +24,10 @@ const Locomotive: React.FC<LocomotiveProps> = ({
   max_speed,
   max_weight,
   weight,
+  width,
   type,
   image,
   className = "",
-  width = 250,
   height = 120,
   onClick
 }) => {
@@ -35,7 +35,7 @@ const Locomotive: React.FC<LocomotiveProps> = ({
     <div 
       className={`relative ${onClick ? 'cursor-pointer hover:scale-105 transition-transform duration-200' : ''} ${className}`}
       onClick={onClick}
-      style={{ width, height }}
+      style={{ width: width || 250 }}
     >
       {/* Locomotive Image */}
       <img 
@@ -51,7 +51,7 @@ const Locomotive: React.FC<LocomotiveProps> = ({
       
       {/* Optional: Display locomotive info on hover */}
       {en_name && (
-        <div className="absolute inset-0 bg-black/80 text-white opacity-0 hover:opacity-100 transition-opacity duration-200 flex flex-col items-center justify-center text-center p-2">
+        <div className="absolute inset-0 bg-black/80 text-white opacity-0 hover:opacity-100 transition-opacity duration-200 flex flex-col items-center justify-center text-center p-2" style={{ transform: 'scale(1)' }}>
           <div className="text-sm font-medium">{en_name}</div>
           {loc_name && <div className="text-xs text-gray-300">{loc_name}</div>}
           {model && <div className="text-xs text-gray-300">Model: {model}</div>}
