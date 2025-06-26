@@ -80,7 +80,7 @@ const Track: React.FC<TrackProps> = ({
         {Array.from({ length: getPantographCount() - 1 }, (_, index) => (
             <path 
               key={index}
-              d={`M ${pantographOffset * index + 40} -40 Q ${pantographOffset * (index + 0.5) + 40 + railSize / 2} 20 ${pantographOffset * (index + 1) + 110} -40`}
+              d={`M ${(pantographOffset + 75) * index + 40} -40 Q ${(pantographOffset + 75) * (index + 0.5) + 40} 20 ${(pantographOffset + 75) * (index + 1) + 40} -40`}
               stroke="white"
               strokeWidth={1}
               fill="none"
