@@ -1,0 +1,69 @@
+import React from 'react';
+
+interface TrainCarProps {
+  id?: number;
+  en_name?: string;
+  loc_name?: string;
+  model?: string;
+  type?: 'passenger' | 'freight';
+  weight?: number;
+  type_info?: {
+    seats?: number;
+    cargo_weight?: number;
+  };
+  image?: string;
+  className?: string;
+  width?: number;
+  height?: number;
+  onClick?: () => void;
+}
+
+const TrainCar: React.FC<TrainCarProps> = ({
+  id,
+  en_name,
+  loc_name,
+  model,
+  type,
+  weight,
+  type_info,
+  image,
+  className = "",
+  width = 200,
+  height = 100,
+  onClick
+}) => {
+  return (
+    <div 
+      className={`relative ${onClick ? 'cursor-pointer hover:scale-105 transition-transform duration-200' : ''} ${className}`}
+      onClick={onClick}
+      style={{ width, height }}
+    >
+      {/* Train Car Image */}
+      <img 
+        src={image || "/assets/images/cars/YZ.png"} 
+        alt={en_name || "Train Car"}
+        className="w-full h-full object-contain"
+        onError={(e) => {
+          // Fallback to a default image if the specified image fails to load
+          const target = e.target as HTMLImageElement;
+          target.src = "/assets/images/cars/YZ.png";
+        }}
+      />
+      
+      {/* Optional: Display car info on hover */}
+      {en_name && (
+        <div className="absolute inset-0 bg-black/80 text-white opacity-0 hover:opacity-100 transition-opacity duration-200 flex flex-col items-center justify-center text-center p-2">
+          <div className="text-sm font-medium">{en_name}</div>
+          {loc_name && <div className="text-xs text-gray-300">{loc_name}</div>}
+          {model && <div className="text-xs text-gray-300">Model: {model}</div>}
+          {type && <div className="text-xs text-gray-300 capitalize">Type: {type}</div>}
+          {weight && <div className="text-xs text-gray-300">Weight: {weight}kg</div>}
+          {type_info?.seats && <div className="text-xs text-gray-300">Seats: {type_info.seats}</div>}
+          {type_info?.cargo_weight && <div className="text-xs text-gray-300">Cargo: {type_info.cargo_weight}kg</div>}
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default TrainCar; 
