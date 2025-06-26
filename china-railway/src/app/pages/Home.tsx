@@ -32,14 +32,14 @@ export default function Home() {
 
   return (
     <div className='overflow-hidden h-screen w-screen'>
-      <div className="min-h-screen bg-black flex flex-col items-center justify-center p-4">
+      <div className="min-h-screen bg-black flex flex-col items-center pt-30 p-4 z-100">
         {/* Title */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-light text-white mb-2 tracking-wide">
-            中国铁道
+          <h1 className="text-6xl font-light text-white mb-2 tracking-wide">
+            中铁道
           </h1>
           <h2 className="text-xl font-light text-white/80 tracking-widest">
-            CHRAIL
+            ChRail Game
           </h2>
         </div>
 
