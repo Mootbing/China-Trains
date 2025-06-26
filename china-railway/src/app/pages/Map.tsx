@@ -2,11 +2,23 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { Loader } from '@googlemaps/js-api-loader';
+import { useAuth } from '../contexts/AuthContext';
+import Dock from '../components/Dock';
+import DockButton from '../components/DockButton';
 
 export default function Map() {
   const mapRef = useRef<HTMLDivElement>(null);
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const [geocoder, setGeocoder] = useState<google.maps.Geocoder | null>(null);
+  const { signOut } = useAuth();
+
+  const handleLogout = async () => {
+    try {
+      await signOut();
+    } catch (error) {
+      console.error('Sign out failed:', error);
+    }
+  };
 
   useEffect(() => {
     const initMap = async () => {
@@ -186,6 +198,13 @@ export default function Map() {
         className="w-full h-full"
         style={{ minHeight: '100vh' }}
       />
+      {/* Dock at the bottom */}
+      <Dock>
+        <DockButton svgUrl="/assets/svgs/dock/trains.svg" label="trains" />
+        <DockButton svgUrl="/assets/svgs/dock/stations.svg" label="stations" />
+        <DockButton svgUrl="/assets/svgs/dock/routes.svg" label="routes" />
+        <DockButton svgUrl="/assets/svgs/dock/logout.svg" label="log out" onClick={handleLogout} />
+      </Dock>
     </div>
   );
 } 
