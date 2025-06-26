@@ -27,6 +27,13 @@ export default function Map() {
             center: chinaCenter,
             zoom: 5,
             mapTypeId: google.maps.MapTypeId.ROADMAP,
+            // Hide all UI controls
+            zoomControl: false,
+            mapTypeControl: false,
+            scaleControl: false,
+            streetViewControl: false,
+            fullscreenControl: false,
+            gestureHandling: 'cooperative',
             styles: [
               // Hide all features except text labels
               // {
