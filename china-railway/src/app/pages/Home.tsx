@@ -9,7 +9,7 @@ export default function Home() {
 
   if (authLoading) {
     return (
-      <div className="h-screen w-screen flex items-center justify-center bg-gray-900">
+      <div className="h-screen w-screen flex items-center justify-center bg-black">
         <div className="text-white text-xl">Loading...</div>
       </div>
     );

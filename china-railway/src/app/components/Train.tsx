@@ -32,15 +32,13 @@ const Train: React.FC<TrainProps> = ({
       }}
     >
       {consists.map((item, index) => {
-        const commonProps = {
-          key: `${isLocomotive(item) ? 'loco' : 'car'}-${item.id}-${index}`,
-          onClick: onClick ? () => onClick(item, index) : undefined,
-        };
+        const key = `${isLocomotive(item) ? 'loco' : 'car'}-${item.id}-${index}`;
+        const clickHandler = onClick ? () => onClick(item, index) : undefined;
 
         if (isLocomotive(item)) {
-          return <Locomotive {...item} {...commonProps} />;
+          return <Locomotive key={key} {...item} onClick={clickHandler} />;
         } else {
-          return <TrainCar {...item} {...commonProps} />;
+          return <TrainCar key={key} {...item} onClick={clickHandler} />;
         }
       })}
     </div>

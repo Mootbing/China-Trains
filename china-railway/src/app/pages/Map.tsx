@@ -48,93 +48,95 @@ export default function Map() {
             fullscreenControl: false,
             gestureHandling: 'cooperative',
             styles: [
-              // Hide all features except text labels
-              // {
-              //   featureType: 'all',
-              //   elementType: 'geometry',
-              //   stylers: [{ visibility: 'off' }]
-              // },
-              // {
-              //   featureType: 'all',
-              //   elementType: 'geometry.fill',
-              //   stylers: [{ visibility: 'off' }]
-              // },
-              // {
-              //   featureType: 'all',
-              //   elementType: 'geometry.stroke',
-              //   stylers: [{ visibility: 'off' }]
-              // },
+              // global geometry (land, roads, parks…) now pure black
               {
-                featureType: 'all',
-                elementType: 'labels.icon',
-                stylers: [{ visibility: 'off' }]
+                elementType: "geometry",
+                stylers: [{ color: "#000000" }]
               },
               {
-                featureType: 'all',
-                elementType: 'labels.text.fill',
-                stylers: [{ color: '#ffffff' }]
+                elementType: "labels.text.stroke",
+                stylers: [{ color: "#242f3e" }]
               },
               {
-                featureType: 'all',
-                elementType: 'labels.text.stroke',
-                stylers: [{ color: '#000000' }, { lightness: 0 }]
+                elementType: "labels.text.fill",
+                stylers: [{ color: "#fff" }]
               },
-              // Show only administrative boundaries and labels
-              // {
-              //   featureType: 'administrative',
-              //   elementType: 'geometry.stroke',
-              //   stylers: [{ color: '#ffffff' }, { visibility: 'on' }]
-              // },
-              // {
-              //   featureType: 'administrative',
-              //   elementType: 'labels.text.fill',
-              //   stylers: [{ color: '#ffffff' }]
-              // },
-              // {
-              //   featureType: 'administrative',
-              //   elementType: 'labels.text.stroke',
-              //   stylers: [{ color: '#000000' }]
-              // },
-              // Show water bodies in dark blue
-              // {
-              //   featureType: 'water',
-              //   elementType: 'geometry.fill',
-              //   stylers: [{ color: '#1a365d' }]
-              // },
-              // {
-              //   featureType: 'water',
-              //   elementType: 'labels.text.fill',
-              //   stylers: [{ color: '#ffffff' }]
-              // },
-              // {
-              //   featureType: 'water',
-              //   elementType: 'labels.text.stroke',
-              //   stylers: [{ color: '#000000' }]
-              // },
-              // Hide roads
-              // {
-              //   featureType: 'road',
-              //   elementType: 'all',
-              //   stylers: [{ visibility: 'off' }]
-              // },
-              // // Hide transit
-              // {
-              //   featureType: 'transit',
-              //   elementType: 'all',
-              //   stylers: [{ visibility: 'off' }]
-              // },
-              // Hide points of interest
-              // {
-              //   featureType: 'poi',
-              //   elementType: 'all',
-              //   stylers: [{ visibility: 'off' }]
-              // },
-              // // Hide landscape features
-              // {
-              //   featureType: 'landscape',
-              //   elementType: 'all',
-              //   stylers: [{ visibility: 'off' }]
-              // }
+              {
+                featureType: "administrative.locality",
+                elementType: "labels.text.fill",
+                stylers: [{ color: "#fff" }]
+              },
+              {
+                featureType: "poi",
+                elementType: "labels.text.fill",
+                stylers: [{ color: "#fff" }]
+              },
+              {
+                featureType: "poi.park",
+                elementType: "geometry",
+                stylers: [{ color: "#263c3f" }]
+              },
+              {
+                featureType: "poi.park",
+                elementType: "labels.text.fill",
+                stylers: [{ color: "#6b9a76" }]
+              },
+              {
+                featureType: "road",
+                elementType: "geometry",
+                stylers: [{ color: "#000000" }]
+              },
+              {
+                featureType: "road",
+                elementType: "geometry.stroke",
+                stylers: [{ color: "#212a37" }]
+              },
+              {
+                featureType: "road",
+                elementType: "labels.text.fill",
+                stylers: [[{ visibility: "off" }]]
+              },
+              {
+                featureType: "road.highway",
+                elementType: "geometry",
+                stylers: [{ color: "#000000" }]
+              },
+              {
+                featureType: "road.highway",
+                elementType: "geometry.stroke",
+                stylers: [{ color: "#1f2835" }]
+              },
+              {
+                featureType: "road.highway",
+                elementType: "labels.text.fill",
+                stylers: [{ visibility: "off" }]
+              },
+              {
+                featureType: "transit",
+                elementType: "geometry",
+                stylers: [{ color: "#000000" }]
+              },
+              {
+                featureType: "transit.station",
+                elementType: "labels.text.fill",
+                stylers: [{ visibility: "off" }]
+              },
+              // ocean stays dark blue
+              {
+                featureType: "water",
+                elementType: "geometry",
+                stylers: [{ color: "#17263c" }]
+              },
+              {
+                featureType: "water",
+                elementType: "labels.text.fill",
+                stylers: [{ color: "#515c6d" }]
+              },
+              {
+                featureType: "water",
+                elementType: "labels.text.stroke",
+                stylers: [{ color: "#17263c" }]
+              }
             ]
           });
 
@@ -150,7 +152,7 @@ export default function Map() {
               const service = new google.maps.places.PlacesService(mapInstance);
               const request = {
                 location: event.latLng,
-                radius: 5000, // 5km radius
+                radius: 15000, // 15km radius
                 type: 'locality'
               };
               
