@@ -40,10 +40,10 @@ export default function Login() {
         {/* Title */}
         <div className="text-center mb-8">
           <h1 className="text-6xl font-light text-white mb-2 tracking-wide">
-            中铁道
+            铁道帝国
           </h1>
           <h2 className="text-xl font-light text-white/80 tracking-widest">
-            ChRail Game
+            Iron Empire
           </h2>
         </div>
 
@@ -100,7 +100,6 @@ export default function Login() {
             />
           ) : null
         }
-        trainPosition="top"
       />
     </div>
   );

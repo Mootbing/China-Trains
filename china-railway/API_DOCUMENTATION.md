@@ -140,6 +140,96 @@ Content-Type: application/json
 }
 ```
 
+## Stations API
+
+### GET `/api/stations`
+
+**Purpose**: Get all stations for the current user or check if a specific station exists
+
+**Query Parameters**:
+- `name` (optional): Station name to check for existence
+
+**Response when no name provided (get all stations)**:
+```json
+{
+  "stations": [
+    {
+      "id": "uuid",
+      "user_id": "user-uuid",
+      "name": "Shanghai",
+      "loc_name": "上海",
+      "level": 1,
+      "latitude": 31.2304,
+      "longitude": 121.4737,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  ]
+}
+```
+
+**Response when name provided (check specific station)**:
+```json
+{
+  "exists": true,
+  "station": {
+    "id": "uuid",
+    "user_id": "user-uuid",
+    "name": "Shanghai",
+    "loc_name": "上海",
+    "level": 1,
+    "latitude": 31.2304,
+    "longitude": 121.4737,
+    "created_at": "2024-01-01T00:00:00Z",
+    "updated_at": "2024-01-01T00:00:00Z"
+  }
+}
+```
+
+### POST `/api/stations`
+Creates a new station at a specific location.
+
+**Request:**
+```json
+POST /api/stations
+Content-Type: application/json
+
+{
+  "name": "Shanghai",
+  "loc_name": "上海",
+  "level": 1
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "station": {
+    "id": "uuid",
+    "user_id": "user-uuid",
+    "name": "Shanghai",
+    "loc_name": "上海",
+    "level": 1,
+    "latitude": 31.2304,
+    "longitude": 121.4737,
+    "created_at": "2024-01-01T00:00:00Z",
+    "updated_at": "2024-01-01T00:00:00Z"
+  },
+  "moneySpent": 10000,
+  "remainingMoney": 5000
+}
+```
+
+**Error Response:**
+```json
+{
+  "error": "Insufficient funds",
+  "required": 10000,
+  "available": 5000
+}
+```
+
 ## Utility Functions
 
 ### Authentication Utilities (`/src/app/utils/auth.ts`)
@@ -156,6 +246,14 @@ The `playerUtils` object provides the following functions:
 
 - `getPlayerData()`: Gets the current player's data
 - `updatePlayerData(playerData)`: Updates the player's data
+
+### Station Utilities (`/src/app/utils/stations.ts`)
+
+The `stationUtils` object provides the following functions:
+
+- `checkStation(name)`: Checks if a station exists at a location
+- `getAllStations()`: Fetches all stations for the current user
+- `createStation(name, loc_name, level, latitude, longitude)`: Creates a new station with coordinates
 
 ## Middleware
 
@@ -191,6 +289,21 @@ CREATE TABLE users (
 ```
 
 **Note:** Level is calculated dynamically using the formula: `level = Math.floor(xp / 1000) + 1`
+
+### `stations` table
+```sql
+CREATE TABLE stations (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+    name TEXT NOT NULL,
+    loc_name TEXT NOT NULL,
+    level INTEGER DEFAULT 1,
+    latitude DECIMAL(10, 8),
+    longitude DECIMAL(11, 8),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+```
 
 ### `profiles` table
 ```sql
@@ -248,6 +361,56 @@ function MyComponent() {
   
   // Level is automatically calculated and available
   console.log(`Player level: ${player.level}`);
+}
+```
+
+### Frontend Station Management
+```typescript
+import { stationUtils } from '../utils/stations';
+
+// Load all user stations
+async function loadUserStations() {
+  const { stations, error } = await stationUtils.getAllStations();
+  
+  if (error) {
+    console.error('Error loading stations:', error);
+    return;
+  }
+  
+  if (stations) {
+    // Display stations on map
+    stations.forEach(station => {
+      if (station.latitude && station.longitude) {
+        // Create marker for each station
+        new google.maps.Marker({
+          position: { lat: station.latitude, lng: station.longitude },
+          map: map,
+          title: `${station.loc_name || station.name} Station (Level ${station.level})`
+        });
+      }
+    });
+  }
+}
+
+async function handleLocationClick(placeName: string, localizedName: string, latLng: google.maps.LatLng) {
+  // Check if station exists
+  const { exists, station } = await stationUtils.checkStation(placeName);
+  
+  if (exists) {
+    console.log(`You own a Level ${station.level} station at ${station.loc_name || station.name}`);
+  } else {
+    // Create new station with localized name and coordinates
+    const { success, station: newStation } = await stationUtils.createStation(
+      placeName, 
+      localizedName, 
+      1,
+      latLng.lat(),
+      latLng.lng()
+    );
+    if (success) {
+      console.log(`Station created at ${newStation.loc_name || newStation.name}`);
+    }
+  }
 }
 ```
 

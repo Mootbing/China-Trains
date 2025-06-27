@@ -30,9 +30,11 @@ export async function middleware(request: NextRequest) {
 
   // If accessing API routes that require authentication, check session
   if (request.nextUrl.pathname.startsWith('/api/player/') || 
-      request.nextUrl.pathname.startsWith('/api/auth/')) {
+      (request.nextUrl.pathname.startsWith('/api/auth/') && 
+       !request.nextUrl.pathname.startsWith('/api/auth/signin') &&
+       !request.nextUrl.pathname.startsWith('/api/auth/session'))) {
     
-    if (!session && !request.nextUrl.pathname.startsWith('/api/auth/signin')) {
+    if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
   }

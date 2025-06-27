@@ -38,4 +38,11 @@ CREATE POLICY "Users can update their own data" ON public.users
     FOR UPDATE USING (auth.uid() = id);
 
 CREATE POLICY "Users can insert their own data" ON public.users
-    FOR INSERT WITH CHECK (auth.uid() = id); 
+    FOR INSERT WITH CHECK (auth.uid() = id);
+
+-- Add latitude and longitude columns to stations table
+ALTER TABLE stations ADD COLUMN IF NOT EXISTS latitude DECIMAL(10, 8);
+ALTER TABLE stations ADD COLUMN IF NOT EXISTS longitude DECIMAL(11, 8);
+
+-- Add index for better performance on location queries
+CREATE INDEX IF NOT EXISTS idx_stations_location ON stations(latitude, longitude); 
