@@ -2,11 +2,8 @@ import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
 
-export async function GET(request: NextRequest) {
-  const requestUrl = new URL(request.url);
-  const code = requestUrl.searchParams.get('code');
-
-  if (code) {
+export async function POST(request: NextRequest) {
+  try {
     const cookieStore = await cookies();
     
     const supabase = createServerClient(
@@ -32,9 +29,18 @@ export async function GET(request: NextRequest) {
       }
     );
     
-    await supabase.auth.exchangeCodeForSession(code);
-  }
+    const { error } = await supabase.auth.signOut();
 
-  // URL to redirect to after sign in process completes
-  return NextResponse.redirect(requestUrl.origin);
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 400 });
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error('Sign out error:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' }, 
+      { status: 500 }
+    );
+  }
 } 

@@ -1,14 +1,8 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
-import { supabase } from '../../lib/supabase';
 import { useAuth } from './AuthContext';
-
-interface PlayerData {
-  money: number;
-  xp: number;
-  level: number;
-}
+import { playerUtils, PlayerData } from '../utils/player';
 
 interface PlayerContextType {
   player: PlayerData;
@@ -32,7 +26,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
   const [initialized, setInitialized] = useState(false);
   const isInitialLoad = useRef(true);
 
-  // Load player data from Supabase when user changes
+  // Load player data from API when user changes
   useEffect(() => {
     if (user) {
       loadPlayerData();
@@ -51,50 +45,17 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
       setLoading(true);
       console.log('Loading player data for user:', user.id);
       
-      const { data, error } = await supabase
-        .from('users')
-        .select('money, xp')
-        .eq('id', user.id)
-        .single();
+      const { data, error } = await playerUtils.getPlayerData();
 
       if (error) {
         console.error('Error loading player data:', error);
-        
-        // If the user record doesn't exist, create it
-        if (error.code === 'PGRST116') { // No rows returned
-          console.log('User record not found, creating new record...');
-          const { data: newData, error: createError } = await supabase
-            .from('users')
-            .insert({
-              id: user.id,
-              money: 10000,
-              xp: 0
-            })
-            .select('money, xp')
-            .single();
-
-          if (createError) {
-            console.error('Error creating user record:', createError);
-            setPlayer({ money: 10000, xp: 0, level: 1 });
-          } else if (newData) {
-            console.log('Created new player data:', newData);
-            setPlayer({
-              money: Number(newData.money),
-              xp: newData.xp,
-              level: 1
-            });
-          }
-        } else {
-          // Other error, use default values
-          setPlayer({ money: 10000, xp: 0, level: 1 });
-        }
+        setPlayer({ money: 10000, xp: 0, level: 1 });
       } else if (data) {
         console.log('Loaded player data:', data);
-        const level = Math.floor(data.xp / 1000) + 1;
         setPlayer({
           money: Number(data.money),
           xp: data.xp,
-          level: level
+          level: data.level
         });
       }
     } catch (error) {
@@ -115,7 +76,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     }
   }, [player.xp, player.level]);
 
-  // Save to Supabase whenever player data changes (but not during initial load)
+  // Save to API whenever player data changes (but not during initial load)
   useEffect(() => {
     if (user && initialized && !isInitialLoad.current) {
       savePlayerData();
@@ -126,14 +87,8 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     if (!user) return;
 
     try {
-      console.log('Saving player data:', { id: user.id, money: player.money, xp: player.xp });
-      const { error } = await supabase
-        .from('users')
-        .upsert({
-          id: user.id,
-          money: player.money,
-          xp: player.xp
-        });
+      console.log('Saving player data:', { id: user.id, money: player.money, xp: player.xp, level: player.level });
+      const { error } = await playerUtils.updatePlayerData(player);
 
       if (error) {
         console.error('Error saving player data:', error);

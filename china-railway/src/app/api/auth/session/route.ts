@@ -3,10 +3,7 @@ import { cookies } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(request: NextRequest) {
-  const requestUrl = new URL(request.url);
-  const code = requestUrl.searchParams.get('code');
-
-  if (code) {
+  try {
     const cookieStore = await cookies();
     
     const supabase = createServerClient(
@@ -32,9 +29,21 @@ export async function GET(request: NextRequest) {
       }
     );
     
-    await supabase.auth.exchangeCodeForSession(code);
-  }
+    const { data: { session }, error } = await supabase.auth.getSession();
 
-  // URL to redirect to after sign in process completes
-  return NextResponse.redirect(requestUrl.origin);
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 400 });
+    }
+
+    return NextResponse.json({ 
+      session,
+      user: session?.user || null
+    });
+  } catch (error) {
+    console.error('Get session error:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' }, 
+      { status: 500 }
+    );
+  }
 } 
