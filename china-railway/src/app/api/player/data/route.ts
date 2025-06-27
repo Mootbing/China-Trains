@@ -36,10 +36,10 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Get player data from users table
+    // Get player data from users table (only money and xp)
     const { data, error } = await supabase
       .from('users')
-      .select('money, xp, level')
+      .select('money, xp')
       .eq('id', user.id)
       .single();
 
@@ -51,10 +51,9 @@ export async function GET(request: NextRequest) {
           .insert({
             id: user.id,
             money: 10000,
-            xp: 0,
-            level: 1
+            xp: 0
           })
-          .select('money, xp, level')
+          .select('money, xp')
           .single();
 
         if (createError) {
@@ -112,18 +111,17 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { money, xp, level } = body;
+    const { money, xp } = body;
 
-    // Update user data in users table
+    // Update user data in users table (only money and xp)
     const { data, error } = await supabase
       .from('users')
       .upsert({
         id: user.id,
         money,
-        xp,
-        level
+        xp
       })
-      .select('money, xp, level')
+      .select('money, xp')
       .single();
 
     if (error) {

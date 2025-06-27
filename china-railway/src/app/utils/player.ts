@@ -1,7 +1,6 @@
 export interface PlayerData {
   money: number;
   xp: number;
-  level: number;
 }
 
 export const playerUtils = {

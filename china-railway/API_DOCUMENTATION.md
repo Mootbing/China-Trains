@@ -89,7 +89,7 @@ GET /api/auth/session
 ## Player Data API Routes
 
 ### GET `/api/player/data`
-Gets the current player's data (money, XP, level).
+Gets the current player's data (money, XP). Level is calculated dynamically from XP.
 
 **Request:**
 ```json
@@ -100,8 +100,7 @@ GET /api/player/data
 ```json
 {
   "money": 10000,
-  "xp": 500,
-  "level": 1
+  "xp": 500
 }
 ```
 
@@ -122,8 +121,7 @@ Content-Type: application/json
 
 {
   "money": 15000,
-  "xp": 750,
-  "level": 1
+  "xp": 750
 }
 ```
 
@@ -131,8 +129,7 @@ Content-Type: application/json
 ```json
 {
   "money": 15000,
-  "xp": 750,
-  "level": 1
+  "xp": 750
 }
 ```
 
@@ -188,11 +185,12 @@ CREATE TABLE users (
     id UUID REFERENCES auth.users(id) ON DELETE CASCADE PRIMARY KEY,
     money INTEGER DEFAULT 10000,
     xp INTEGER DEFAULT 0,
-    level INTEGER DEFAULT 1,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 ```
+
+**Note:** Level is calculated dynamically using the formula: `level = Math.floor(xp / 1000) + 1`
 
 ### `profiles` table
 ```sql
@@ -247,6 +245,9 @@ function MyComponent() {
   const handleEarnXP = () => {
     addXP(100);
   };
+  
+  // Level is automatically calculated and available
+  console.log(`Player level: ${player.level}`);
 }
 ```
 

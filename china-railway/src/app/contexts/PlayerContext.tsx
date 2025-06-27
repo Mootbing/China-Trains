@@ -5,7 +5,7 @@ import { useAuth } from './AuthContext';
 import { playerUtils, PlayerData } from '../utils/player';
 
 interface PlayerContextType {
-  player: PlayerData;
+  player: PlayerData & { level: number };
   addMoney: (amount: number) => void;
   spendMoney: (amount: number) => boolean;
   addXP: (amount: number) => void;
@@ -15,9 +15,14 @@ interface PlayerContextType {
 
 const PlayerContext = createContext<PlayerContextType | undefined>(undefined);
 
+// Calculate level based on XP (simple formula: level = Math.floor(xp / 1000) + 1)
+const calculateLevel = (xp: number): number => {
+  return Math.floor(xp / 1000) + 1;
+};
+
 export function PlayerProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
-  const [player, setPlayer] = useState<PlayerData>({
+  const [player, setPlayer] = useState<PlayerData & { level: number }>({
     money: 10000,
     xp: 0,
     level: 1
@@ -52,10 +57,11 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
         setPlayer({ money: 10000, xp: 0, level: 1 });
       } else if (data) {
         console.log('Loaded player data:', data);
+        const level = calculateLevel(data.xp);
         setPlayer({
           money: Number(data.money),
           xp: data.xp,
-          level: data.level
+          level: level
         });
       }
     } catch (error) {
@@ -68,9 +74,9 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // Calculate level based on XP (simple formula: level = Math.floor(xp / 1000) + 1)
+  // Calculate level based on XP whenever XP changes
   useEffect(() => {
-    const newLevel = Math.floor(player.xp / 1000) + 1;
+    const newLevel = calculateLevel(player.xp);
     if (newLevel !== player.level) {
       setPlayer(prev => ({ ...prev, level: newLevel }));
     }
@@ -87,8 +93,12 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     if (!user) return;
 
     try {
-      console.log('Saving player data:', { id: user.id, money: player.money, xp: player.xp, level: player.level });
-      const { error } = await playerUtils.updatePlayerData(player);
+      console.log('Saving player data:', { id: user.id, money: player.money, xp: player.xp });
+      // Only save money and xp, level is calculated dynamically
+      const { error } = await playerUtils.updatePlayerData({
+        money: player.money,
+        xp: player.xp
+      });
 
       if (error) {
         console.error('Error saving player data:', error);
