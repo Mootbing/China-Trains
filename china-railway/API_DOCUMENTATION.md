@@ -182,9 +182,9 @@ Moving authentication calls to the backend provides several security benefits:
 
 The application uses the following Supabase tables:
 
-### `player_data` table
+### `users` table
 ```sql
-CREATE TABLE player_data (
+CREATE TABLE users (
     id UUID REFERENCES auth.users(id) ON DELETE CASCADE PRIMARY KEY,
     money INTEGER DEFAULT 10000,
     xp INTEGER DEFAULT 0,

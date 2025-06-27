@@ -36,18 +36,18 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Get player data
+    // Get player data from users table
     const { data, error } = await supabase
-      .from('player_data')
+      .from('users')
       .select('money, xp, level')
       .eq('id', user.id)
       .single();
 
     if (error) {
-      // If player data doesn't exist, create it
+      // If user data doesn't exist, create it
       if (error.code === 'PGRST116') {
         const { data: newData, error: createError } = await supabase
-          .from('player_data')
+          .from('users')
           .insert({
             id: user.id,
             money: 10000,
@@ -114,9 +114,9 @@ export async function PUT(request: NextRequest) {
     const body = await request.json();
     const { money, xp, level } = body;
 
-    // Update player data
+    // Update user data in users table
     const { data, error } = await supabase
-      .from('player_data')
+      .from('users')
       .upsert({
         id: user.id,
         money,
