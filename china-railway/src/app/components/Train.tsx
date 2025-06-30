@@ -9,6 +9,7 @@ interface TrainProps {
   spacing?: number;
   scale?: number;
   onClick?: (item: LocomotiveType | Car, index: number) => void;
+  hoverable?: boolean;
 }
 
 const Train: React.FC<TrainProps> = ({
@@ -16,7 +17,8 @@ const Train: React.FC<TrainProps> = ({
   className = "",
   spacing = 0,
   scale = 1,
-  onClick
+  onClick,
+  hoverable
 }) => {
   const isLocomotive = (item: LocomotiveType | Car): item is LocomotiveType => {
     return 'max_speed' in item;
@@ -36,9 +38,9 @@ const Train: React.FC<TrainProps> = ({
         const clickHandler = onClick ? () => onClick(item, index) : undefined;
 
         if (isLocomotive(item)) {
-          return <Locomotive key={key} {...item} onClick={clickHandler} />;
+          return <Locomotive key={key} {...item} onClick={clickHandler} hoverable={hoverable} />;
         } else {
-          return <TrainCar key={key} {...item} onClick={clickHandler} />;
+          return <TrainCar key={key} {...item} onClick={clickHandler} hoverable={hoverable} />;
         }
       })}
     </div>

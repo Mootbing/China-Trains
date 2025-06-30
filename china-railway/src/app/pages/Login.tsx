@@ -97,6 +97,7 @@ export default function Login() {
               consists={trainConsist}
               scale={1}
               onClick={handleTrainItemClick}
+              hoverable={false}
             />
           ) : null
         }

@@ -5,6 +5,8 @@ import Track from '../components/Track';
 import { Station } from '../utils/stations';
 import locomotives from '../../../public/assets/data/locomotives.json';
 import cars from '../../../public/assets/data/cars.json';
+import Locomotive from '../components/Locomotive';
+import TrainCar from '../components/TrainCar';
 
 interface VehicleFromDB {
   model: string;
@@ -21,6 +23,7 @@ interface VehicleData {
   width: number;
   type: string;
   image: string;
+  is_locomotive?: boolean;
 }
 
 interface GroupedVehicle {
@@ -45,17 +48,24 @@ export default function StationPage({ station }: { station: Station }) {
             console.log('Vehicles at this station from DB:', data);
 
             const detailedVehicles = data.map((vehicle) => {
-              let vehicleData;
+              let vehicleDataFound;
+              let is_locomotive = false;
+
               if (vehicle.type === 'locomotive') {
-                vehicleData = (locomotives as VehicleData[]).find(
+                vehicleDataFound = (locomotives as VehicleData[]).find(
                   (loco) => loco.model === vehicle.model
                 );
+                is_locomotive = true;
               } else if (vehicle.type === 'car') {
-                vehicleData = (cars as VehicleData[]).find(
+                vehicleDataFound = (cars as VehicleData[]).find(
                   (car) => car.model === vehicle.model
                 );
               }
-              return vehicleData;
+
+              if (vehicleDataFound) {
+                return { ...vehicleDataFound, is_locomotive };
+              }
+              return undefined;
             }).filter(Boolean) as VehicleData[];
 
             const vehicleCounts = detailedVehicles.reduce((acc, vehicle) => {
@@ -68,6 +78,20 @@ export default function StationPage({ station }: { station: Station }) {
             }, {} as Record<string, { vehicle: VehicleData; count: number }>);
         
             const grouped = Object.values(vehicleCounts);
+
+            grouped.sort((a, b) => {
+              const aIsLoco = a.vehicle.is_locomotive;
+              const bIsLoco = b.vehicle.is_locomotive;
+
+              if (aIsLoco && !bIsLoco) {
+                return -1;
+              }
+              if (!aIsLoco && bIsLoco) {
+                return 1;
+              }
+
+              return a.vehicle.en_name.localeCompare(b.vehicle.en_name);
+            });
 
             console.log('Grouped vehicle data:', grouped);
             setGroupedVehicles(grouped);
