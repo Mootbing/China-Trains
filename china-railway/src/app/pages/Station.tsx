@@ -2,11 +2,13 @@
 
 import { useEffect, useState, useRef } from 'react';
 import Track from '../components/Track';
+import Train from '../components/Train';
 import { Station } from '../utils/stations';
 import locomotives from '../../../public/assets/data/locomotives.json';
 import cars from '../../../public/assets/data/cars.json';
 import Locomotive from '../components/Locomotive';
 import TrainCar from '../components/TrainCar';
+import { Locomotive as LocomotiveType, Car } from '../utils/dataLoader';
 
 interface VehicleFromDB {
   model: string;
@@ -33,10 +35,14 @@ interface GroupedVehicle {
 
 export default function StationPage({ station }: { station: Station }) {
   const [groupedVehicles, setGroupedVehicles] = useState<GroupedVehicle[]>([]);
+  const [trainConsist, setTrainConsist] = useState<(LocomotiveType | Car)[]>([]);
   const scrollableContainerRef = useRef<HTMLDivElement>(null);
+  const trackRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
   const [scrollLeft, setScrollLeft] = useState(0);
+  const [draggedVehicle, setDraggedVehicle] = useState<VehicleData | null>(null);
+  const [isDragOver, setIsDragOver] = useState(false);
 
   useEffect(() => {
     if (station) {
@@ -135,11 +141,73 @@ export default function StationPage({ station }: { station: Station }) {
     scrollableContainerRef.current.scrollLeft = scrollLeft - walk;
   };
 
+  const handleDragStart = (e: React.DragEvent, vehicle: VehicleData) => {
+    setDraggedVehicle(vehicle);
+    e.dataTransfer.effectAllowed = 'copy';
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'copy';
+    setIsDragOver(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    if (!trackRef.current?.contains(e.relatedTarget as Node)) {
+      setIsDragOver(false);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+    
+    if (draggedVehicle) {
+      // Convert VehicleData to LocomotiveType or Car
+      let newVehicle: LocomotiveType | Car;
+      
+      if (draggedVehicle.is_locomotive) {
+        newVehicle = {
+          id: draggedVehicle.id,
+          en_name: draggedVehicle.en_name,
+          loc_name: draggedVehicle.loc_name,
+          model: draggedVehicle.model,
+          max_speed: (locomotives as any[]).find(l => l.id === draggedVehicle.id)?.max_speed || 100,
+          max_weight: (locomotives as any[]).find(l => l.id === draggedVehicle.id)?.max_weight || 1000000,
+          weight: draggedVehicle.weight,
+          width: draggedVehicle.width,
+          type: draggedVehicle.type as 'electric' | 'diesel' | 'steam',
+          image: draggedVehicle.image,
+        } as LocomotiveType;
+      } else {
+        newVehicle = {
+          id: draggedVehicle.id,
+          en_name: draggedVehicle.en_name,
+          loc_name: draggedVehicle.loc_name,
+          model: draggedVehicle.model,
+          type: draggedVehicle.type as 'passenger' | 'freight',
+          weight: draggedVehicle.weight,
+          width: draggedVehicle.width,
+          type_info: (cars as any[]).find(c => c.id === draggedVehicle.id)?.type_info || {},
+          image: draggedVehicle.image,
+        } as Car;
+      }
+
+      setTrainConsist(prev => [...prev, newVehicle]);
+      setDraggedVehicle(null);
+    }
+  };
+
+  const handleTrainItemClick = (item: LocomotiveType | Car, index: number) => {
+    // Remove the clicked item from the train
+    setTrainConsist(prev => prev.filter((_, i) => i !== index));
+  };
+
   return (
     <div className='relative overflow-hidden h-screen'>
       <div
         ref={scrollableContainerRef}
-        className="absolute bottom-20 w-full overflow-x-auto whitespace-nowrap py-4 cursor-grab"
+        className="absolute bottom-0 w-full overflow-x-auto whitespace-nowrap py-4 cursor-grab"
         onMouseDown={onMouseDown}
         onMouseLeave={onMouseLeave}
         onMouseUp={onMouseUp}
@@ -147,7 +215,12 @@ export default function StationPage({ station }: { station: Station }) {
       >
         <div className="inline-flex space-x-4 px-4">
           {groupedVehicles.map(({ vehicle, count }, index) => (
-            <div key={index} className="relative inline-block bg-white/5 p-2 rounded-lg shadow">
+            <div 
+              key={index} 
+              className="relative inline-block bg-white/5 p-2 rounded-lg shadow cursor-move"
+              draggable
+              onDragStart={(e) => handleDragStart(e, vehicle)}
+            >
               {count > 1 && (
                 <div className="absolute top-0 right-0 -mt-2 -mr-2 bg-white/10 text-white rounded-full h-6 w-6 flex items-center justify-center text-xs font-bold z-10">
                   x{count}
@@ -156,16 +229,36 @@ export default function StationPage({ station }: { station: Station }) {
               <img
                 src={`/${vehicle.image}`}
                 alt={vehicle.en_name}
-                className="h-24 object-contain"
+                className="h-20 object-contain pointer-events-none"
               />
               <div className="text-center mt-2 text-sm font-semibold">{vehicle.en_name}</div>
             </div>
           ))}
         </div>
       </div>
-      <Track 
-        className="absolute bottom-0"
-      />
+      
+      <div
+        ref={trackRef}
+        className={`absolute bottom-0 w-full transition-all duration-200 ${isDragOver ? 'bg-blue-500/20' : ''}`}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+      >
+        <Track 
+          // electrified={false}
+          className="bottom-50"
+          train={
+            trainConsist.length > 0 ? (
+              <Train 
+                consists={trainConsist}
+                scale={1}
+                onClick={handleTrainItemClick}
+                hoverable={true}
+              />
+            ) : null
+          }
+        />
+      </div>
     </div>
   );
 }

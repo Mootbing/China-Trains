@@ -86,7 +86,7 @@ export default function Login() {
       
       {/* Track with Train */}
       <Track 
-        className="absolute bottom-100"
+        className="bottom-10"
         train={
           (locoLoading || carLoading) ? (
             <div className="text-white">Loading train...</div>
