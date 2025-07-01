@@ -33,7 +33,7 @@ interface GroupedVehicle {
   count: number;
 }
 
-export default function StationPage({ station }: { station: Station }) {
+export default function StationPage({ station, onBack }: { station: Station; onBack?: () => void }) {
   const [groupedVehicles, setGroupedVehicles] = useState<GroupedVehicle[]>([]);
   const [trainConsist, setTrainConsist] = useState<(LocomotiveType | Car)[]>([]);
   const scrollableContainerRef = useRef<HTMLDivElement>(null);
@@ -205,6 +205,37 @@ export default function StationPage({ station }: { station: Station }) {
 
   return (
     <div className='relative overflow-hidden h-screen'>
+      
+      {/* Back to Map Button */}
+      {onBack && (
+        <button
+          onClick={onBack}
+          className="absolute top-4 left-4 z-20 bg-black/50 hover:bg-black/70 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
+        >
+          <svg 
+            className="w-5 h-5" 
+            fill="none" 
+            stroke="currentColor" 
+            viewBox="0 0 24 24"
+          >
+            <path 
+              strokeLinecap="round" 
+              strokeLinejoin="round" 
+              strokeWidth={2} 
+              d="M10 19l-7-7m0 0l7-7m-7 7h18" 
+            />
+          </svg>
+          Back to Map
+        </button>
+      )}
+
+      {/* Station Title */}
+      <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-20 bg-black/50 text-white px-6 py-2 rounded-lg">
+        <h1 className="text-xl font-bold text-center">
+          {station.loc_name || station.name} Station
+        </h1>
+        <p className="text-sm text-gray-300 text-center">Level {station.level}</p>
+      </div>
 
       <div
         ref={trackRef}

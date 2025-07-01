@@ -457,45 +457,50 @@ export default function Map() {
     initMap();
   }, []);
 
-  // If showing station page, render it instead of the map
-  if (showStationPage && selectedStation) {
-    return (
-      <StationPage 
-        station={selectedStation} 
-        onBack={handleBackToMap} 
-      />
-    );
-  }
-
   return (
     <div className="h-screen w-screen bg-black">
+      {/* Map Container */}
       <div 
-        ref={mapRef} 
-        className="w-full h-full"
-        style={{ minHeight: '100vh' }}
-      />
-      {/* Top Dock for player stats */}
-      <TopDock />
-      {/* Dock at the bottom */}
-      <Dock>
-        <DockButton svgUrl="/assets/svgs/dock/trains.svg" label="trains" />
-        <DockButton svgUrl="/assets/svgs/dock/stations.svg" label="stations" />
-        <DockButton svgUrl="/assets/svgs/dock/routes.svg" label="routes" />
-        <DockButton svgUrl="/assets/svgs/dock/logout.svg" label="log out" onClick={handleLogout} />
-      </Dock>
+        className={`w-full h-full ${showStationPage ? 'hidden' : 'block'}`}
+      >
+        <div 
+          ref={mapRef} 
+          className="w-full h-full"
+          style={{ minHeight: '100vh' }}
+        />
+        {/* Top Dock for player stats */}
+        <TopDock />
+        {/* Dock at the bottom */}
+        <Dock>
+          <DockButton svgUrl="/assets/svgs/dock/trains.svg" label="trains" />
+          <DockButton svgUrl="/assets/svgs/dock/stations.svg" label="stations" />
+          <DockButton svgUrl="/assets/svgs/dock/routes.svg" label="routes" />
+          <DockButton svgUrl="/assets/svgs/dock/logout.svg" label="log out" onClick={handleLogout} />
+        </Dock>
 
-      {/* Station Purchase Modal */}
-      <StationPurchaseModal
-        isOpen={isModalOpen}
-        onClose={handleCloseModal}
-        onConfirm={handleConfirmPurchase}
-        stationName={pendingStation?.locName || pendingStation?.placeName || ''}
-        stationCost={10000}
-        currentMoney={player.money}
-        isPurchasing={isPurchasing}
-        purchaseSuccess={purchaseSuccess}
-        onViewStation={handleViewStation}
-      />
+        {/* Station Purchase Modal */}
+        <StationPurchaseModal
+          isOpen={isModalOpen}
+          onClose={handleCloseModal}
+          onConfirm={handleConfirmPurchase}
+          stationName={pendingStation?.locName || pendingStation?.placeName || ''}
+          stationCost={10000}
+          currentMoney={player.money}
+          isPurchasing={isPurchasing}
+          purchaseSuccess={purchaseSuccess}
+          onViewStation={handleViewStation}
+        />
+      </div>
+
+      {/* Station Page Container */}
+      {showStationPage && selectedStation && (
+        <div className="absolute inset-0 z-50">
+          <StationPage 
+            station={selectedStation} 
+            onBack={handleBackToMap} 
+          />
+        </div>
+      )}
     </div>
   );
 } 
