@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
     // Get vehicles data
     const { data, error } = await supabase
       .from('vehicles')
-      .select('model, type')
+      .select('id, model, type')
       .eq('user_id', user.id)
       .eq('station_id', stationId);
 

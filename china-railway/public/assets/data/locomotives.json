@@ -53,7 +53,7 @@
       "loc_name": "和谐1型电力机车",
       "model": "HXD1",
       "max_speed": 120,
-      "max_weight": 4500000,
+      "max_weight": 500000, 
       "weight": 184000,
       "width": 1000,
       "type": "electric",

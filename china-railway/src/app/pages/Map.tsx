@@ -38,6 +38,15 @@ export default function Map() {
   const [isDispatching, setIsDispatching] = useState(false);
   const [selectedRoute, setSelectedRoute] = useState<Station[]>([]);
   const [startStation, setStartStation] = useState<Station | null>(null);
+  const [vehicleIds, setVehicleIds] = useState<number[]>([]);
+  const [trainMetrics, setTrainMetrics] = useState<{
+    totalWeight: number;
+    maxWeight: number;
+    maxSpeed: number;
+    effectiveSpeed: number;
+    isOverweight: boolean;
+  } | null>(null);
+  const [routePolylines, setRoutePolylines] = useState<google.maps.Polyline[]>([]);
 
   const handleLogout = async () => {
     try {
@@ -279,24 +288,75 @@ export default function Map() {
     setIsDispatching(false);
     setSelectedRoute([]);
     setStartStation(null);
+    setVehicleIds([]);
+    setTrainMetrics(null);
   };
 
-  const handleDispatch = (startingStation: Station) => {
+  const handleDispatch = (startingStation: Station, vehicleIdList: number[] = [], metrics?: any) => {
     setShowStationPage(false);
     setSelectedStation(null);
     setIsDispatching(true);
     setSelectedRoute([]);
     setStartStation(startingStation);
+    setVehicleIds(vehicleIdList);
+    setTrainMetrics(metrics || null);
   };
 
   const handleCancelDispatch = () => {
     setIsDispatching(false);
     setSelectedRoute([]);
     setStartStation(null);
+    setVehicleIds([]);
+    setTrainMetrics(null);
+    clearRouteLines();
   };
 
   const handleDeleteLastStation = () => {
     setSelectedRoute(prev => prev.slice(0, -1));
+  };
+
+  const handleSendoffTrain = async () => {
+    if (!startStation || selectedRoute.length === 0 || vehicleIds.length === 0) {
+      alert('请确保选择了起始站、路线和车辆');
+      return;
+    }
+
+    try {
+      // Create array of all station IDs in order: start station + selected route
+      const allStationIds = [startStation.id, ...selectedRoute.map(station => station.id)];
+      
+      const response = await fetch('/api/routes/dispatch', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          vehicleIds,
+          allStationIds,
+          startStationId: allStationIds[0],
+          endStationId: allStationIds[allStationIds.length - 1],
+        }),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        alert(`列车已成功发车！路线ID: ${result.routeId}`);
+        
+        // Reset dispatching state
+        setIsDispatching(false);
+        setSelectedRoute([]);
+        setStartStation(null);
+        setVehicleIds([]);
+        setTrainMetrics(null);
+        clearRouteLines();
+      } else {
+        const error = await response.json();
+        alert(`发车失败: ${error.error}`);
+      }
+    } catch (error) {
+      console.error('Error sending off train:', error);
+      alert('发车时发生错误');
+    }
   };
 
   const handleViewStation = () => {
@@ -320,6 +380,123 @@ export default function Map() {
       setPurchaseSuccess(undefined);
     }
   };
+
+  // Haversine distance calculation function
+  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+    const R = 6371; // Earth's radius in kilometers
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = 
+      Math.sin(dLat/2) * Math.sin(dLat/2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+      Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c; // Distance in kilometers
+  };
+
+  // Calculate journey metrics
+  const calculateJourneyMetrics = () => {
+    if (!startStation || selectedRoute.length === 0 || !trainMetrics) {
+      return { totalDistance: 0, estimatedTime: 0, effectiveSpeed: 0 };
+    }
+
+    const allStations = [startStation, ...selectedRoute];
+    let totalDistance = 0;
+
+    // Calculate total distance using Haversine formula
+    for (let i = 0; i < allStations.length - 1; i++) {
+      const current = allStations[i];
+      const next = allStations[i + 1];
+      
+      if (current.latitude && current.longitude && next.latitude && next.longitude) {
+        const segmentDistance = calculateDistance(
+          current.latitude, current.longitude,
+          next.latitude, next.longitude
+        );
+        totalDistance += segmentDistance;
+      }
+    }
+
+    // Calculate estimated time (distance / speed)
+    const effectiveSpeed = trainMetrics.effectiveSpeed;
+    const estimatedTime = effectiveSpeed > 0 ? totalDistance / effectiveSpeed : 0; // Time in hours
+
+    return { totalDistance, estimatedTime, effectiveSpeed };
+  };
+
+  // Format time as hours, minutes, seconds
+  const formatTime = (hours: number) => {
+    const h = Math.floor(hours);
+    const m = Math.floor((hours - h) * 60);
+    const s = Math.floor(((hours - h) * 60 - m) * 60);
+    return `${h}h ${m}m ${s}s`;
+  };
+
+  // Function to draw route lines between connected stations
+  const drawRouteLines = () => {
+    if (!map || !isDispatching) return;
+
+    // Clear existing polylines
+    routePolylines.forEach(polyline => polyline.setMap(null));
+    setRoutePolylines([]);
+
+    // Create new polylines for the current route
+    const allStations = startStation ? [startStation, ...selectedRoute] : selectedRoute;
+    const newPolylines: google.maps.Polyline[] = [];
+
+    for (let i = 0; i < allStations.length - 1; i++) {
+      const current = allStations[i];
+      const next = allStations[i + 1];
+
+      if (current.latitude && current.longitude && next.latitude && next.longitude) {
+        const polyline = new google.maps.Polyline({
+          path: [
+            { lat: current.latitude, lng: current.longitude },
+            { lat: next.latitude, lng: next.longitude }
+          ],
+          geodesic: true,
+          strokeColor: '#00ff00', // Green color for route lines
+          strokeOpacity: 0.8,
+          strokeWeight: 3,
+          map: map
+        });
+
+        newPolylines.push(polyline);
+      }
+    }
+
+    setRoutePolylines(newPolylines);
+  };
+
+  // Function to clear route lines
+  const clearRouteLines = () => {
+    routePolylines.forEach(polyline => polyline.setMap(null));
+    setRoutePolylines([]);
+  };
+
+  const journeyMetrics = calculateJourneyMetrics();
+  
+  // Update route lines when route changes
+  useEffect(() => {
+    if (isDispatching) {
+      drawRouteLines();
+    } else {
+      clearRouteLines();
+    }
+  }, [selectedRoute, startStation, isDispatching, map]);
+
+  // Debug logging for journey metrics
+  useEffect(() => {
+    if (isDispatching && journeyMetrics.totalDistance > 0) {
+      console.log('Journey Metrics:', {
+        totalDistance: journeyMetrics.totalDistance,
+        effectiveSpeed: journeyMetrics.effectiveSpeed,
+        estimatedTime: journeyMetrics.estimatedTime,
+        formattedTime: formatTime(journeyMetrics.estimatedTime),
+        trainMetrics: trainMetrics
+      });
+    }
+  }, [selectedRoute, trainMetrics, isDispatching, journeyMetrics, formatTime]);
 
   useEffect(() => {
     const initMap = async () => {
@@ -374,7 +551,7 @@ export default function Map() {
               {
                 featureType: "poi",
                 elementType: "labels.text.fill",
-                stylers: [{ color: "#ffffff" }]
+                stylers: [{ visibility: "off" }]
               },
               // parks
               {
@@ -385,7 +562,7 @@ export default function Map() {
               {
                 featureType: "poi.park",
                 elementType: "labels.text.fill",
-                stylers: [{ color: "#6b9a76" }]
+                stylers: [{ visibility: "off" }]
               },
             
               // roads
@@ -513,6 +690,13 @@ export default function Map() {
     initMap();
   }, []);
 
+  // Cleanup route lines on component unmount
+  useEffect(() => {
+    return () => {
+      clearRouteLines();
+    };
+  }, []);
+
   return (
     <div className="h-screen w-screen bg-black">
       {/* Map Container */}
@@ -573,6 +757,32 @@ export default function Map() {
               </p>
             </div>
           )}
+
+          {/* Journey Metrics Display */}
+          {trainMetrics && selectedRoute.length > 0 && journeyMetrics.totalDistance > 0 && (
+            <div className="mt-3 p-2 bg-white/10 rounded">
+              <div className="flex justify-center gap-4 text-xs">
+                <span className="flex items-center gap-1">
+                  <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                  </svg>
+                  {Math.round(journeyMetrics.totalDistance)}km
+                </span>
+                <span className="flex items-center gap-1">
+                  <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.293l-3-3a1 1 0 00-1.414 1.414L10.586 9H7a1 1 0 100 2h3.586l-1.293 1.293a1 1 0 101.414 1.414l3-3a1 1 0 000-1.414z" clipRule="evenodd" />
+                  </svg>
+                  {Math.round(journeyMetrics.effectiveSpeed)}km/h
+                </span>
+                <span className="flex items-center gap-1">
+                  <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+                  </svg>
+                  {formatTime(journeyMetrics.estimatedTime)}
+                </span>
+              </div>
+            </div>
+          )}
           
           <div className="flex gap-2 mt-3">
             <button
@@ -591,7 +801,7 @@ export default function Map() {
             )}
             {selectedRoute.length > 0 && (
               <button
-                onClick={() => {}}
+                onClick={handleSendoffTrain}
                 className="flex-1 bg-green-500/80 hover:bg-green-500 text-white px-3 py-1 rounded text-sm transition-colors"
               >
                 发车
@@ -607,7 +817,7 @@ export default function Map() {
           <StationPage 
             station={selectedStation} 
             onBack={handleBackToMap}
-            onDispatch={(startingStation) => handleDispatch(startingStation)}
+            onDispatch={(startingStation, vehicleIdList, metrics) => handleDispatch(startingStation, vehicleIdList, metrics)}
           />
         </div>
       )}

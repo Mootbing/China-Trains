@@ -11,9 +11,9 @@ import TrainCar from '../components/TrainCar';
 import { Locomotive as LocomotiveType, Car } from '../utils/dataLoader';
 
 interface VehicleFromDB {
+  id: string;
   model: string;
   type: string;
-  image: string;
 }
 
 interface VehicleData {
@@ -31,15 +31,25 @@ interface VehicleData {
 interface GroupedVehicle {
   vehicle: VehicleData;
   count: number;
+  databaseIds: string[]; // Track all database IDs for this model
+}
+
+interface TrainMetrics {
+  totalWeight: number;
+  maxWeight: number;
+  maxSpeed: number;
+  effectiveSpeed: number;
+  isOverweight: boolean;
 }
 
 export default function StationPage({ station, onBack, onDispatch }: { 
   station: Station; 
   onBack?: () => void;
-  onDispatch?: (startingStation: Station) => void;
+  onDispatch?: (startingStation: Station, vehicleIds?: number[], trainMetrics?: TrainMetrics) => void;
 }) {
   const [groupedVehicles, setGroupedVehicles] = useState<GroupedVehicle[]>([]);
   const [availableCounts, setAvailableCounts] = useState<Record<string, number>>({});
+  const [availableDatabaseIds, setAvailableDatabaseIds] = useState<Record<string, string[]>>({});
   const [trainConsist, setTrainConsist] = useState<(LocomotiveType | Car)[]>([]);
   const scrollableContainerRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
@@ -48,6 +58,57 @@ export default function StationPage({ station, onBack, onDispatch }: {
   const [scrollLeft, setScrollLeft] = useState(0);
   const [draggedVehicle, setDraggedVehicle] = useState<VehicleData | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
+
+  // Calculate train performance metrics
+  const calculateTrainMetrics = () => {
+    const locomotives = trainConsist.filter(vehicle => 'max_speed' in vehicle && 'max_weight' in vehicle) as LocomotiveType[];
+    const cars = trainConsist.filter(vehicle => !('max_speed' in vehicle)) as Car[];
+    
+    if (locomotives.length === 0) {
+      return { totalWeight: 0, maxWeight: 0, maxSpeed: 0, effectiveSpeed: 0, isOverweight: false };
+    }
+
+    // Calculate total weight (locomotive + cars)
+    const locomotiveWeight = locomotives.reduce((sum, loco) => sum + loco.weight, 0);
+    const carWeight = cars.reduce((sum, car) => sum + car.weight, 0);
+    const totalWeight = locomotiveWeight + carWeight;
+
+    // Get max weight and speed from locomotives
+    const maxWeight = locomotives.reduce((sum, loco) => sum + loco.max_weight, 0);
+    const maxSpeed = Math.max(...locomotives.map(loco => loco.max_speed));
+
+    // Calculate effective speed based on weight
+    let effectiveSpeed = maxSpeed;
+    const isOverweight = totalWeight > maxWeight;
+    
+    if (isOverweight && maxWeight > 0) {
+      const weightRatio = (totalWeight - maxWeight) / maxWeight;
+      effectiveSpeed = Math.max(1, maxSpeed * (1 - weightRatio));
+    }
+
+    return { totalWeight, maxWeight, maxSpeed, effectiveSpeed, isOverweight };
+  };
+
+  const trainMetrics = calculateTrainMetrics();
+  
+  // Debug logging for train metrics
+  useEffect(() => {
+    if (trainMetrics.maxWeight > 0) {
+      console.log('Train Metrics:', {
+        totalWeight: trainMetrics.totalWeight,
+        maxWeight: trainMetrics.maxWeight,
+        maxSpeed: trainMetrics.maxSpeed,
+        effectiveSpeed: trainMetrics.effectiveSpeed,
+        isOverweight: trainMetrics.isOverweight,
+        trainConsist: trainConsist.map(v => ({ model: v.model, weight: v.weight }))
+      });
+    }
+  }, [trainConsist, trainMetrics]);
+  
+  // Check if there's at least one locomotive in the consist
+  const hasLocomotive = trainConsist.some(vehicle => 
+    'max_speed' in vehicle && 'max_weight' in vehicle
+  );
 
   useEffect(() => {
     if (station) {
@@ -74,19 +135,28 @@ export default function StationPage({ station, onBack, onDispatch }: {
               }
 
               if (vehicleDataFound) {
-                return { ...vehicleDataFound, is_locomotive };
+                return { 
+                  ...vehicleDataFound, 
+                  is_locomotive,
+                  database_id: vehicle.id // Store the database ID separately
+                };
               }
               return undefined;
-            }).filter(Boolean) as VehicleData[];
+            }).filter(Boolean) as (VehicleData & { database_id: string })[];
 
             const vehicleCounts = detailedVehicles.reduce((acc, vehicle) => {
               const model = vehicle.model;
               if (!acc[model]) {
-                acc[model] = { vehicle: vehicle, count: 0 };
+                acc[model] = { 
+                  vehicle: vehicle, 
+                  count: 0,
+                  databaseIds: []
+                };
               }
               acc[model].count++;
+              acc[model].databaseIds.push((vehicle as any).database_id);
               return acc;
-            }, {} as Record<string, { vehicle: VehicleData; count: number }>);
+            }, {} as Record<string, GroupedVehicle>);
         
             const grouped = Object.values(vehicleCounts);
 
@@ -107,12 +177,15 @@ export default function StationPage({ station, onBack, onDispatch }: {
             console.log('Grouped vehicle data:', grouped);
             setGroupedVehicles(grouped);
             
-            // Initialize available counts
+            // Initialize available counts and database IDs
             const initialCounts: Record<string, number> = {};
-            grouped.forEach(({ vehicle, count }) => {
+            const initialDatabaseIds: Record<string, string[]> = {};
+            grouped.forEach(({ vehicle, count, databaseIds }) => {
               initialCounts[vehicle.model] = count;
+              initialDatabaseIds[vehicle.model] = [...databaseIds];
             });
             setAvailableCounts(initialCounts);
+            setAvailableDatabaseIds(initialDatabaseIds);
           } else {
             console.error('Failed to fetch vehicles');
           }
@@ -175,6 +248,17 @@ export default function StationPage({ station, onBack, onDispatch }: {
     setIsDragOver(false);
     
     if (draggedVehicle && availableCounts[draggedVehicle.model] > 0) {
+      // Get a specific database ID for this vehicle instance
+      const availableIds = availableDatabaseIds[draggedVehicle.model];
+      if (availableIds.length === 0) {
+        console.error('No available database IDs for model:', draggedVehicle.model);
+        return;
+      }
+      
+      const selectedDatabaseId = availableIds[0]; // Take the first available ID
+      console.log(`Dropping ${draggedVehicle.model}, selected database ID:`, selectedDatabaseId);
+      console.log('Available IDs for model:', draggedVehicle.model, availableIds);
+      
       // Convert VehicleData to LocomotiveType or Car
       let newVehicle: LocomotiveType | Car;
       
@@ -190,7 +274,8 @@ export default function StationPage({ station, onBack, onDispatch }: {
           width: draggedVehicle.width,
           type: draggedVehicle.type as 'electric' | 'diesel' | 'steam',
           image: draggedVehicle.image,
-        } as LocomotiveType;
+          database_id: selectedDatabaseId,
+        } as LocomotiveType & { database_id: string };
       } else {
         newVehicle = {
           id: draggedVehicle.id,
@@ -202,15 +287,21 @@ export default function StationPage({ station, onBack, onDispatch }: {
           width: draggedVehicle.width,
           type_info: (cars as any[]).find(c => c.id === draggedVehicle.id)?.type_info || {},
           image: draggedVehicle.image,
-        } as Car;
+          database_id: selectedDatabaseId,
+        } as Car & { database_id: string };
       }
 
       setTrainConsist(prev => [...prev, newVehicle]);
       
-      // Decrease available count
+      // Decrease available count and remove the used database ID
       setAvailableCounts(prev => ({
         ...prev,
         [draggedVehicle.model]: prev[draggedVehicle.model] - 1
+      }));
+      
+      setAvailableDatabaseIds(prev => ({
+        ...prev,
+        [draggedVehicle.model]: prev[draggedVehicle.model].filter(id => id !== selectedDatabaseId)
       }));
       
       setDraggedVehicle(null);
@@ -221,17 +312,18 @@ export default function StationPage({ station, onBack, onDispatch }: {
     // Remove the clicked item from the train
     setTrainConsist(prev => prev.filter((_, i) => i !== index));
     
-    // Restore the count for this vehicle type
+    // Restore the count and database ID for this vehicle type
+    const databaseId = (item as any).database_id;
     setAvailableCounts(prev => ({
       ...prev,
       [item.model]: prev[item.model] + 1
     }));
+    
+    setAvailableDatabaseIds(prev => ({
+      ...prev,
+      [item.model]: [...prev[item.model], databaseId]
+    }));
   };
-
-  // Check if there's at least one locomotive in the consist
-  const hasLocomotive = trainConsist.some(vehicle => 
-    'max_speed' in vehicle && 'max_weight' in vehicle
-  );
 
   return (
     <div className='relative overflow-hidden h-screen'>
@@ -262,7 +354,13 @@ export default function StationPage({ station, onBack, onDispatch }: {
       {/* Dispatch Button */}
       {hasLocomotive && onDispatch && (
         <button
-          onClick={() => onDispatch(station)}
+          onClick={() => {
+            const vehicleIds = trainConsist.map(vehicle => (vehicle as any).database_id || vehicle.id);
+            console.log('Dispatching train with vehicle IDs:', vehicleIds);
+            console.log('Train consist:', trainConsist);
+            console.log('Train metrics being passed:', trainMetrics);
+            onDispatch(station, vehicleIds, trainMetrics);
+          }}
           className="absolute top-4 right-4 z-20 bg-green-600/80 hover:bg-green-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
         >
           <svg 
@@ -288,6 +386,31 @@ export default function StationPage({ station, onBack, onDispatch }: {
           {station.loc_name || station.name}站
         </h1>
         <p className="text-sm text-gray-300 text-center">{station.level}等站</p>
+        
+        {/* Train Metrics Display */}
+        {trainMetrics.maxWeight > 0 && (
+          <div className="flex justify-center gap-4 mt-2 pt-2 border-t border-white/20">
+            {/* Weight Display */}
+            <div className="flex items-center gap-1">
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M3 6a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 14a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
+              </svg>
+              <span className={`text-xs ${trainMetrics.isOverweight ? 'text-red-400' : 'text-green-400'}`}>
+                {Math.round(trainMetrics.totalWeight / 1000)}t/{Math.round(trainMetrics.maxWeight / 1000)}t
+              </span>
+            </div>
+            
+            {/* Speed Display */}
+            <div className="flex items-center gap-1">
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.293l-3-3a1 1 0 00-1.414 1.414L10.586 9H7a1 1 0 100 2h3.586l-1.293 1.293a1 1 0 101.414 1.414l3-3a1 1 0 000-1.414z" clipRule="evenodd" />
+              </svg>
+              <span className={`text-xs ${trainMetrics.isOverweight ? 'text-red-400' : 'text-green-400'}`}>
+                {Math.round(trainMetrics.effectiveSpeed)}km/h
+              </span>
+            </div>
+          </div>
+        )}
       </div>
 
       <div
