@@ -224,49 +224,10 @@ export default function Map() {
         });
         setIsPurchasing(false);
 
-        // Add a station marker on the map
+        // Refresh the station display on the map to include the new station with proper click listeners
         if (map) {
-          const createStationMarkers = (level: number, position: google.maps.LatLng, title: string) => {
-            const markers = [];
-            const baseSize = 7;
-            const ringSpacing = 1.5;
-            let currentSize = baseSize + (level + 1) * ringSpacing * 2;
-            
-            for (let i = 0; i < level; i++) {
-              const isBlack = i % 2 === 1; // Even indices are black, odd are white
-              
-              markers.push(new google.maps.Marker({
-                position: position,
-                map: map,
-                title: title,
-                animation: i === 0 ? google.maps.Animation.DROP : undefined, // Only animate the largest ring
-                icon: {
-                  path: google.maps.SymbolPath.CIRCLE,
-                  scale: currentSize,
-                  fillColor: isBlack ? '#000000' : '#ffffff',
-                  fillOpacity: 1,
-                  strokeColor: '#000000',
-                  strokeWeight: 1
-                }
-              }));
-              
-              currentSize -= ringSpacing * 2;
-            }
-            
-            return markers;
-          };
-          
-          createStationMarkers(newStation.level, latLng, `${displayStationName} Station (Level ${newStation.level})`);
+          displayStationsOnMap([newStation, ...userStations], map);
         }
-
-        // Set the selected station and show station page after a short delay
-        setTimeout(() => {
-          setSelectedStation(newStation);
-          setShowStationPage(true);
-          setIsModalOpen(false);
-          setPendingStation(null);
-          setPurchaseSuccess(undefined);
-        }, 2000); // Show station page after 2 seconds
       }
     } catch (error) {
       console.error('Error confirming purchase:', error);
@@ -360,24 +321,19 @@ export default function Map() {
   };
 
   const handleViewStation = () => {
-    if (purchaseSuccess && pendingStation) {
-      // Create a station object from the pending station data
-      const station: Station = {
-        id: '', // This will be set by the API response
-        user_id: '', // This will be set by the API
-        name: pendingStation.placeName,
-        loc_name: pendingStation.locName,
-        level: 1,
-        latitude: pendingStation.latLng.lat(),
-        longitude: pendingStation.latLng.lng(),
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      };
-      setSelectedStation(station);
-      setShowStationPage(true);
-      setIsModalOpen(false);
-      setPendingStation(null);
-      setPurchaseSuccess(undefined);
+    if (purchaseSuccess) {
+      // Find the newly created station from the userStations array
+      const newStation = userStations.find(station => 
+        (station.loc_name || station.name) === purchaseSuccess.stationName
+      );
+      
+      if (newStation) {
+        setSelectedStation(newStation);
+        setShowStationPage(true);
+        setIsModalOpen(false);
+        setPendingStation(null);
+        setPurchaseSuccess(undefined);
+      }
     }
   };
 
@@ -455,7 +411,7 @@ export default function Map() {
             { lat: next.latitude, lng: next.longitude }
           ],
           geodesic: true,
-          strokeColor: '#00ff00', // Green color for route lines
+          strokeColor: '#fff', // Green color for route lines
           strokeOpacity: 0.8,
           strokeWeight: 3,
           map: map
