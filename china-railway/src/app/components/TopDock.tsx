@@ -17,20 +17,7 @@ const TopDock: React.FC = () => {
   if (loading) {
     return (
       <div className="fixed top-6 left-1/2 transform -translate-x-1/2 z-50 bg-white/5 backdrop-blur-xl rounded-xl shadow-lg flex items-center px-6 py-3 gap-6">
-        <div className="flex items-center gap-2">
-          <div className="w-6 h-6 bg-yellow-500 rounded-full animate-pulse"></div>
-          <div className="flex flex-col">
-            <span className="text-xs text-gray-300 uppercase tracking-wider">Money</span>
-            <span className="text-white font-mono text-lg font-bold">Loading...</span>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-6 h-6 bg-blue-500 rounded-full animate-pulse"></div>
-          <div className="flex flex-col">
-            <span className="text-xs text-gray-300 uppercase tracking-wider">Level</span>
-            <span className="text-white font-mono text-lg font-bold">Loading...</span>
-          </div>
-        </div>
+        <span className="text-white font-mono text-lg font-bold">加载中...</span>
       </div>
     );
   }
@@ -43,7 +30,7 @@ const TopDock: React.FC = () => {
           <span className="text-xs font-bold text-yellow-900">¥</span>
         </div>
         <div className="flex flex-col">
-          <span className="text-xs text-gray-300 uppercase tracking-wider">Money</span>
+          <span className="text-xs text-gray-300 uppercase tracking-wider">钱</span>
           <span className="text-white font-mono text-lg font-bold">
             {player.money.toLocaleString()}
           </span>
@@ -56,7 +43,7 @@ const TopDock: React.FC = () => {
           <span className="text-xs font-bold text-blue-900">XP</span>
         </div>
         <div className="flex flex-col">
-          <span className="text-xs text-gray-300 uppercase tracking-wider">Level {player.level}</span>
+          <span className="text-xs text-gray-300 uppercase tracking-wider">等级 {player.level}</span>
           <div className="flex items-center gap-2">
             <span className="text-white font-mono text-lg font-bold">
               {player.xp.toLocaleString()}

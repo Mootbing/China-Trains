@@ -60,7 +60,7 @@ const Track: React.FC<TrackProps> = ({
             </div>
           </div>
           
-          <svg className="overflow-visible w-full" style={{position: "absolute", bottom: 190}}>
+          <svg className="overflow-visible w-full" style={{position: "absolute", bottom: 175}}>
             {/* draw line between each pantograph */}
             {Array.from({ length: getPantographCount() - 1 }, (_, index) => (
               <path

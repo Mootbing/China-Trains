@@ -255,7 +255,7 @@ export default function StationPage({ station, onBack, onDispatch }: {
               d="M10 19l-7-7m0 0l7-7m-7 7h18" 
             />
           </svg>
-          Back to Map
+          返回
         </button>
       )}
 
@@ -278,16 +278,16 @@ export default function StationPage({ station, onBack, onDispatch }: {
               d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" 
             />
           </svg>
-          Dispatch Train
+          发车
         </button>
       )}
 
       {/* Station Title */}
       <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-20 bg-black/50 text-white px-6 py-2 rounded-lg">
         <h1 className="text-xl font-bold text-center">
-          {station.loc_name || station.name} Station
+          {station.loc_name || station.name}站
         </h1>
-        <p className="text-sm text-gray-300 text-center">Level {station.level}</p>
+        <p className="text-sm text-gray-300 text-center">{station.level}等站</p>
       </div>
 
       <div
@@ -338,10 +338,10 @@ export default function StationPage({ station, onBack, onDispatch }: {
               )}
               <img
                 src={`/${vehicle.image}`}
-                alt={vehicle.en_name}
+                alt={vehicle.loc_name}
                 className="h-20 object-contain pointer-events-none"
               />
-              <div className="text-center mt-2 text-sm font-semibold">{vehicle.en_name}</div>
+              <div className="text-center mt-2 text-sm font-semibold">{vehicle.loc_name}</div>
             </div>
           ))}
         </div>

@@ -79,7 +79,7 @@ export default function Login() {
               </svg>
             )}
             <span>
-              {isLoading ? 'Connecting...' : 'Continue with Google'}
+              {isLoading ? '连接中...' : 'Google 登录'}
             </span>
           </button>
         )}
@@ -90,9 +90,9 @@ export default function Login() {
         className="bottom-100"
         train={
           (locoLoading || carLoading) ? (
-            <div className="text-white">Loading train...</div>
+            <div className="text-white">火车模型正在加载中...</div>
           ) : (locoError || carError) ? (
-            <div className="text-red-500">Error loading train data</div>
+            <div className="text-red-500">火车模型加载失败</div>
           ) : trainConsist.length > 0 ? (
             <Train 
               consists={trainConsist}

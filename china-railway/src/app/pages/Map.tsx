@@ -528,10 +528,10 @@ export default function Map() {
         {!isDispatching && <><TopDock />
         {/* Dock at the bottom */}
         <Dock>
-          <DockButton svgUrl="/assets/svgs/dock/trains.svg" label="trains" />
-          <DockButton svgUrl="/assets/svgs/dock/stations.svg" label="stations" />
-          <DockButton svgUrl="/assets/svgs/dock/routes.svg" label="routes" />
-          <DockButton svgUrl="/assets/svgs/dock/logout.svg" label="log out" onClick={handleLogout} />
+          <DockButton svgUrl="/assets/svgs/dock/trains.svg" label="车" />
+          <DockButton svgUrl="/assets/svgs/dock/stations.svg" label="站" />
+          <DockButton svgUrl="/assets/svgs/dock/routes.svg" label="线" />
+          <DockButton svgUrl="/assets/svgs/dock/logout.svg" label="退" onClick={handleLogout} />
         </Dock>
 
         {/* Station Purchase Modal */}
@@ -551,7 +551,7 @@ export default function Map() {
       {/* Dispatching Overlay */}
       {isDispatching && (
         <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-20 bg-white/10 backdrop-blur-sm text-white px-6 py-3 rounded-lg min-w-80">
-          <h2 className="text-lg font-bold text-center">🚂 Select Destinations</h2>
+          <h2 className="text-lg font-bold text-center">编辑线路</h2>
           
           {/* Route Display */}
           {startStation && (
@@ -579,14 +579,22 @@ export default function Map() {
               onClick={handleCancelDispatch}
               className="flex-1 bg-red-500/80 hover:bg-red-500 text-white px-3 py-1 rounded text-sm transition-colors"
             >
-              Cancel Dispatch
+              取消
             </button>
             {selectedRoute.length > 0 && (
               <button
                 onClick={handleDeleteLastStation}
                 className="flex-1 bg-white/20 hover:bg-white/50 text-white px-3 py-1 rounded text-sm transition-colors"
               >
-                Delete Last
+                删
+              </button>
+            )}
+            {selectedRoute.length > 0 && (
+              <button
+                onClick={() => {}}
+                className="flex-1 bg-green-500/80 hover:bg-green-500 text-white px-3 py-1 rounded text-sm transition-colors"
+              >
+                发车
               </button>
             )}
           </div>

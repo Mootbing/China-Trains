@@ -68,40 +68,15 @@ export default function StationPurchaseModal({
 
               {/* Success Title */}
               <h3 className="text-xl font-semibold text-white mb-2">
-                Station Purchased!
+                站已购！
               </h3>
-
-              {/* Success Details */}
-              <div className="mb-6">
-                <p className="text-white/80 mb-4">
-                  Your new station has been successfully purchased
-                </p>
-                <div className="bg-white/5 rounded-lg p-4 space-y-2">
-                  <div>
-                    <p className="text-white/70 text-sm">Location:</p>
-                    <p className="text-white font-semibold">{purchaseSuccess.stationName}</p>
-                  </div>
-                  <div>
-                    <p className="text-white/70 text-sm">Level:</p>
-                    <p className="text-white font-semibold">{purchaseSuccess.level}</p>
-                  </div>
-                  <div>
-                    <p className="text-white/70 text-sm">Cost:</p>
-                    <p className="text-green-400 font-semibold">¥{purchaseSuccess.moneySpent.toLocaleString()}</p>
-                  </div>
-                  <div>
-                    <p className="text-white/70 text-sm">Remaining money:</p>
-                    <p className="text-white font-semibold">¥{purchaseSuccess.remainingMoney.toLocaleString()}</p>
-                  </div>
-                </div>
-              </div>
 
               {/* Close button */}
               <button
                 onClick={onClose}
                 className="w-full px-4 py-3 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors font-semibold"
               >
-                Close
+                关
               </button>
               
               {/* View Station button */}
@@ -110,7 +85,7 @@ export default function StationPurchaseModal({
                   onClick={onViewStation}
                   className="w-full px-4 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors font-semibold mt-3"
                 >
-                  View Station
+                  去看看
                 </button>
               )}
             </>
@@ -126,12 +101,12 @@ export default function StationPurchaseModal({
 
               {/* Loading Title */}
               <h3 className="text-xl font-semibold text-white mb-2">
-                Purchasing Station...
+                请稍等...
               </h3>
 
               {/* Loading Message */}
               <p className="text-white/80">
-                Please wait while we process your purchase
+                买站中...
               </p>
             </>
           ) : (
@@ -149,31 +124,17 @@ export default function StationPurchaseModal({
 
               {/* Title */}
               <h3 className="text-xl font-semibold text-white mb-2">
-                Purchase Station
+                买站
               </h3>
 
               {/* Station details */}
               <div className="mb-6">
-                <p className="text-white/80 mb-4">
-                  Would you like to buy a Level 1 station at
-                </p>
                 <p className="text-2xl font-bold text-white mb-2">
                   {stationName}
                 </p>
-                <p className="text-green-400 font-semibold">
-                  for ¥{stationCost.toLocaleString()}?
+                <p className="text-red-400 font-semibold">
+                  ¥{stationCost.toLocaleString()} <span className="text-white/70 text-sm">(您有 ¥{currentMoney.toLocaleString()})</span>
                 </p>
-              </div>
-
-              {/* Money info */}
-              <div className="bg-white/5 rounded-lg p-4 mb-6">
-                <p className="text-white/70 text-sm mb-1">Your current money:</p>
-                <p className="text-white font-semibold">¥{currentMoney.toLocaleString()}</p>
-                {currentMoney < stationCost && (
-                  <p className="text-red-400 text-sm mt-1">
-                    Insufficient funds
-                  </p>
-                )}
               </div>
 
               {/* Buttons */}
@@ -182,14 +143,14 @@ export default function StationPurchaseModal({
                   onClick={onClose}
                   className="flex-1 px-4 py-3 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors border border-white/20"
                 >
-                  Cancel
+                  取消
                 </button>
                 <button
                   onClick={onConfirm}
                   disabled={currentMoney < stationCost}
                   className="flex-1 px-4 py-3 bg-green-500 hover:bg-green-600 disabled:bg-gray-500 disabled:cursor-not-allowed text-white rounded-lg transition-colors font-semibold"
                 >
-                  Confirm Purchase
+                  购买
                 </button>
               </div>
             </>
