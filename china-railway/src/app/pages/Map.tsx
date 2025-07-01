@@ -36,6 +36,8 @@ export default function Map() {
   const [showStationPage, setShowStationPage] = useState(false);
   const [selectedStation, setSelectedStation] = useState<Station | null>(null);
   const [isDispatching, setIsDispatching] = useState(false);
+  const [selectedRoute, setSelectedRoute] = useState<Station[]>([]);
+  const [startStation, setStartStation] = useState<Station | null>(null);
 
   const handleLogout = async () => {
     try {
@@ -130,7 +132,14 @@ export default function Map() {
       marker.addListener('click', () => {
         const station = (marker as any).stationData;
         if (isDispatching) {
-          console.log('Selected destination station:', station);
+          // Add station to route if not already the last station selected
+          setSelectedRoute(prev => {
+            const lastStation = prev[prev.length - 1];
+            if (!lastStation || lastStation.id !== station.id) {
+              return [...prev, station];
+            }
+            return prev; // Don't add duplicate consecutive stations
+          });
         } else {
           setSelectedStation(station);
           setShowStationPage(true);
@@ -268,12 +277,26 @@ export default function Map() {
     setShowStationPage(false);
     setSelectedStation(null);
     setIsDispatching(false);
+    setSelectedRoute([]);
+    setStartStation(null);
   };
 
-  const handleDispatch = () => {
+  const handleDispatch = (startingStation: Station) => {
     setShowStationPage(false);
     setSelectedStation(null);
     setIsDispatching(true);
+    setSelectedRoute([]);
+    setStartStation(startingStation);
+  };
+
+  const handleCancelDispatch = () => {
+    setIsDispatching(false);
+    setSelectedRoute([]);
+    setStartStation(null);
+  };
+
+  const handleDeleteLastStation = () => {
+    setSelectedRoute(prev => prev.slice(0, -1));
   };
 
   const handleViewStation = () => {
@@ -527,15 +550,46 @@ export default function Map() {
 
       {/* Dispatching Overlay */}
       {isDispatching && (
-        <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-20 bg-blue-600/90 text-white px-6 py-3 rounded-lg">
-          <h2 className="text-lg font-bold text-center">🚂 Train Dispatching Mode</h2>
-          <p className="text-sm text-center mt-1">Select destination stations on the map</p>
-          <button
-            onClick={() => setIsDispatching(false)}
-            className="mt-2 w-full bg-white/20 hover:bg-white/30 text-white px-3 py-1 rounded text-sm transition-colors"
-          >
-            Cancel Dispatch
-          </button>
+        <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-20 bg-white/10 backdrop-blur-sm text-white px-6 py-3 rounded-lg min-w-80">
+          <h2 className="text-lg font-bold text-center">🚂 Select Destinations</h2>
+          
+          {/* Route Display */}
+          {startStation && (
+            <div className="mt-3 p-2 bg-white/10 rounded">
+              <p className="text-sm font-mono">
+                <span>{startStation.loc_name || startStation.name}</span>
+                {selectedRoute.length > 0 && (
+                  <>
+                    <span> → </span>
+                    {selectedRoute.map((station, index) => (
+                      <span key={station.id}>
+                        {station.loc_name || station.name}
+                        {index < selectedRoute.length - 1 && ' → '}
+                      </span>
+                    ))}
+                  </>
+                )}
+                {selectedRoute.length === 0 && <span> → </span>}
+              </p>
+            </div>
+          )}
+          
+          <div className="flex gap-2 mt-3">
+            <button
+              onClick={handleCancelDispatch}
+              className="flex-1 bg-red-500/80 hover:bg-red-500 text-white px-3 py-1 rounded text-sm transition-colors"
+            >
+              Cancel Dispatch
+            </button>
+            {selectedRoute.length > 0 && (
+              <button
+                onClick={handleDeleteLastStation}
+                className="flex-1 bg-white/20 hover:bg-white/50 text-white px-3 py-1 rounded text-sm transition-colors"
+              >
+                Delete Last
+              </button>
+            )}
+          </div>
         </div>
       )}
 
@@ -545,7 +599,7 @@ export default function Map() {
           <StationPage 
             station={selectedStation} 
             onBack={handleBackToMap}
-            onDispatch={handleDispatch}
+            onDispatch={(startingStation) => handleDispatch(startingStation)}
           />
         </div>
       )}

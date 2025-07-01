@@ -36,7 +36,7 @@ interface GroupedVehicle {
 export default function StationPage({ station, onBack, onDispatch }: { 
   station: Station; 
   onBack?: () => void;
-  onDispatch?: () => void;
+  onDispatch?: (startingStation: Station) => void;
 }) {
   const [groupedVehicles, setGroupedVehicles] = useState<GroupedVehicle[]>([]);
   const [availableCounts, setAvailableCounts] = useState<Record<string, number>>({});
@@ -262,7 +262,7 @@ export default function StationPage({ station, onBack, onDispatch }: {
       {/* Dispatch Button */}
       {hasLocomotive && onDispatch && (
         <button
-          onClick={onDispatch}
+          onClick={() => onDispatch(station)}
           className="absolute top-4 right-4 z-20 bg-green-600/80 hover:bg-green-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
         >
           <svg 
