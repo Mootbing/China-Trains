@@ -39,6 +39,7 @@ export default function StationPage({ station, onBack, onDispatch }: {
   onDispatch?: () => void;
 }) {
   const [groupedVehicles, setGroupedVehicles] = useState<GroupedVehicle[]>([]);
+  const [availableCounts, setAvailableCounts] = useState<Record<string, number>>({});
   const [trainConsist, setTrainConsist] = useState<(LocomotiveType | Car)[]>([]);
   const scrollableContainerRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
@@ -105,6 +106,13 @@ export default function StationPage({ station, onBack, onDispatch }: {
 
             console.log('Grouped vehicle data:', grouped);
             setGroupedVehicles(grouped);
+            
+            // Initialize available counts
+            const initialCounts: Record<string, number> = {};
+            grouped.forEach(({ vehicle, count }) => {
+              initialCounts[vehicle.model] = count;
+            });
+            setAvailableCounts(initialCounts);
           } else {
             console.error('Failed to fetch vehicles');
           }
@@ -166,7 +174,7 @@ export default function StationPage({ station, onBack, onDispatch }: {
     e.preventDefault();
     setIsDragOver(false);
     
-    if (draggedVehicle) {
+    if (draggedVehicle && availableCounts[draggedVehicle.model] > 0) {
       // Convert VehicleData to LocomotiveType or Car
       let newVehicle: LocomotiveType | Car;
       
@@ -198,6 +206,13 @@ export default function StationPage({ station, onBack, onDispatch }: {
       }
 
       setTrainConsist(prev => [...prev, newVehicle]);
+      
+      // Decrease available count
+      setAvailableCounts(prev => ({
+        ...prev,
+        [draggedVehicle.model]: prev[draggedVehicle.model] - 1
+      }));
+      
       setDraggedVehicle(null);
     }
   };
@@ -205,6 +220,12 @@ export default function StationPage({ station, onBack, onDispatch }: {
   const handleTrainItemClick = (item: LocomotiveType | Car, index: number) => {
     // Remove the clicked item from the train
     setTrainConsist(prev => prev.filter((_, i) => i !== index));
+    
+    // Restore the count for this vehicle type
+    setAvailableCounts(prev => ({
+      ...prev,
+      [item.model]: prev[item.model] + 1
+    }));
   };
 
   // Check if there's at least one locomotive in the consist
@@ -301,16 +322,18 @@ export default function StationPage({ station, onBack, onDispatch }: {
         onMouseMove={onMouseMove}
       >
         <div className="inline-flex space-x-4 px-4">
-          {groupedVehicles.map(({ vehicle, count }, index) => (
+          {groupedVehicles
+            .filter(({ vehicle }) => availableCounts[vehicle.model] > 0)
+            .map(({ vehicle }, index) => (
             <div 
               key={index} 
               className="relative inline-block bg-white/5 p-2 rounded-lg shadow cursor-move"
               draggable
               onDragStart={(e) => handleDragStart(e, vehicle)}
             >
-              {count > 1 && (
+              {availableCounts[vehicle.model] > 1 && (
                 <div className="absolute top-0 right-0 -mt-2 -mr-2 bg-white/10 text-white rounded-full h-6 w-6 flex items-center justify-center text-xs font-bold z-10">
-                  x{count}
+                  x{availableCounts[vehicle.model]}
                 </div>
               )}
               <img
