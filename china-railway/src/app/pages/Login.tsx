@@ -27,7 +27,8 @@ export default function Login() {
   const trainConsist = [];
   if (locomotive) trainConsist.push(locomotive);
   if (car) trainConsist.push(car);
-  //   if (car) trainConsist.push(car); // Add another car for demonstration
+  if (car) trainConsist.push(car);
+  if (car) trainConsist.push(car);
   
     const handleTrainItemClick = (item: any, index: number) => {
       console.log(`Clicked ${item.en_name} at position ${index}`);
@@ -86,7 +87,7 @@ export default function Login() {
       
       {/* Track with Train */}
       <Track 
-        className="bottom-10"
+        className="bottom-100"
         train={
           (locoLoading || carLoading) ? (
             <div className="text-white">Loading train...</div>

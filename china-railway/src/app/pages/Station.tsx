@@ -205,6 +205,30 @@ export default function StationPage({ station }: { station: Station }) {
 
   return (
     <div className='relative overflow-hidden h-screen'>
+
+      <div
+        ref={trackRef}
+        className={`absolute bottom-0 w-full transition-all duration-200 ${isDragOver ? 'bg-blue-500/20' : ''}`}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+      >
+        <Track 
+          // electrified={false}
+          className="bottom-50"
+          train={
+            trainConsist.length > 0 ? (
+              <Train 
+                consists={trainConsist}
+                scale={1}
+                onClick={handleTrainItemClick}
+                hoverable={true}
+              />
+            ) : null
+          }
+        />
+      </div>
+
       <div
         ref={scrollableContainerRef}
         className="absolute bottom-0 w-full overflow-x-auto whitespace-nowrap py-4 cursor-grab"
@@ -235,29 +259,6 @@ export default function StationPage({ station }: { station: Station }) {
             </div>
           ))}
         </div>
-      </div>
-      
-      <div
-        ref={trackRef}
-        className={`absolute bottom-0 w-full transition-all duration-200 ${isDragOver ? 'bg-blue-500/20' : ''}`}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
-      >
-        <Track 
-          // electrified={false}
-          className="bottom-50"
-          train={
-            trainConsist.length > 0 ? (
-              <Train 
-                consists={trainConsist}
-                scale={1}
-                onClick={handleTrainItemClick}
-                hoverable={true}
-              />
-            ) : null
-          }
-        />
       </div>
     </div>
   );

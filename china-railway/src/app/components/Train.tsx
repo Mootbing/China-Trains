@@ -30,7 +30,7 @@ const Train: React.FC<TrainProps> = ({
       style={{ 
         gap: `${spacing}px`,
         transform: `scale(${scale})`,
-        transformOrigin: 'center'
+        transformOrigin: 'center',
       }}
     >
       {consists.map((item, index) => {
