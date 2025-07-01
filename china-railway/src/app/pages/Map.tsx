@@ -35,6 +35,7 @@ export default function Map() {
   } | undefined>(undefined);
   const [showStationPage, setShowStationPage] = useState(false);
   const [selectedStation, setSelectedStation] = useState<Station | null>(null);
+  const [isDispatching, setIsDispatching] = useState(false);
 
   const handleLogout = async () => {
     try {
@@ -63,7 +64,11 @@ export default function Map() {
     return [];
   };
 
+  const [stationMarkers, setStationMarkers] = useState<google.maps.Marker[]>([]);
+
   const displayStationsOnMap = (stations: Station[], mapInstance: google.maps.Map) => {
+    const markers: google.maps.Marker[] = [];
+    
     stations.forEach(station => {
       if (station.latitude && station.longitude) {
         const position = new google.maps.LatLng(station.latitude, station.longitude);
@@ -71,7 +76,7 @@ export default function Map() {
         
         // Create alternating rings by stacking multiple markers
         const createStationMarkers = (level: number) => {
-          const markers = [];
+          const stationMarkers = [];
           const baseSize = 7;
           const ringSpacing = 1.5;
           let currentSize = baseSize + (level + 1) * ringSpacing * 2;
@@ -93,25 +98,46 @@ export default function Map() {
               }
             });
 
+            // Store station data on marker for click handling
+            (marker as any).stationData = station;
+
             // Add click listener to the largest marker (first one)
             if (i === 0) {
-              marker.addListener('click', () => {
-                setSelectedStation(station);
-                setShowStationPage(true);
-              });
+              markers.push(marker); // Store clickable markers
             }
             
-            markers.push(marker);
+            stationMarkers.push(marker);
             currentSize -= ringSpacing * 2;
           }
           
-          return markers;
+          return stationMarkers;
         };
         
         createStationMarkers(station.level);
       }
     });
+    
+    setStationMarkers(markers);
   };
+
+  // Update station marker click listeners when dispatching state changes
+  useEffect(() => {
+    stationMarkers.forEach(marker => {
+      // Clear existing listeners
+      google.maps.event.clearListeners(marker, 'click');
+      
+      // Add new listener with current dispatching state
+      marker.addListener('click', () => {
+        const station = (marker as any).stationData;
+        if (isDispatching) {
+          console.log('Selected destination station:', station);
+        } else {
+          setSelectedStation(station);
+          setShowStationPage(true);
+        }
+      });
+    });
+  }, [isDispatching, stationMarkers]);
 
   const handleLocationClick = async (placeName: string, locName: string, latLng: google.maps.LatLng) => {
     try {
@@ -241,6 +267,13 @@ export default function Map() {
   const handleBackToMap = () => {
     setShowStationPage(false);
     setSelectedStation(null);
+    setIsDispatching(false);
+  };
+
+  const handleDispatch = () => {
+    setShowStationPage(false);
+    setSelectedStation(null);
+    setIsDispatching(true);
   };
 
   const handleViewStation = () => {
@@ -469,7 +502,7 @@ export default function Map() {
           style={{ minHeight: '100vh' }}
         />
         {/* Top Dock for player stats */}
-        <TopDock />
+        {!isDispatching && <><TopDock />
         {/* Dock at the bottom */}
         <Dock>
           <DockButton svgUrl="/assets/svgs/dock/trains.svg" label="trains" />
@@ -489,15 +522,30 @@ export default function Map() {
           isPurchasing={isPurchasing}
           purchaseSuccess={purchaseSuccess}
           onViewStation={handleViewStation}
-        />
+        /></>}
       </div>
+
+      {/* Dispatching Overlay */}
+      {isDispatching && (
+        <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-20 bg-blue-600/90 text-white px-6 py-3 rounded-lg">
+          <h2 className="text-lg font-bold text-center">🚂 Train Dispatching Mode</h2>
+          <p className="text-sm text-center mt-1">Select destination stations on the map</p>
+          <button
+            onClick={() => setIsDispatching(false)}
+            className="mt-2 w-full bg-white/20 hover:bg-white/30 text-white px-3 py-1 rounded text-sm transition-colors"
+          >
+            Cancel Dispatch
+          </button>
+        </div>
+      )}
 
       {/* Station Page Container */}
       {showStationPage && selectedStation && (
         <div className="absolute inset-0 z-50">
           <StationPage 
             station={selectedStation} 
-            onBack={handleBackToMap} 
+            onBack={handleBackToMap}
+            onDispatch={handleDispatch}
           />
         </div>
       )}

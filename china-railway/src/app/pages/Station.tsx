@@ -33,7 +33,11 @@ interface GroupedVehicle {
   count: number;
 }
 
-export default function StationPage({ station, onBack }: { station: Station; onBack?: () => void }) {
+export default function StationPage({ station, onBack, onDispatch }: { 
+  station: Station; 
+  onBack?: () => void;
+  onDispatch?: () => void;
+}) {
   const [groupedVehicles, setGroupedVehicles] = useState<GroupedVehicle[]>([]);
   const [trainConsist, setTrainConsist] = useState<(LocomotiveType | Car)[]>([]);
   const scrollableContainerRef = useRef<HTMLDivElement>(null);
@@ -203,6 +207,11 @@ export default function StationPage({ station, onBack }: { station: Station; onB
     setTrainConsist(prev => prev.filter((_, i) => i !== index));
   };
 
+  // Check if there's at least one locomotive in the consist
+  const hasLocomotive = trainConsist.some(vehicle => 
+    'max_speed' in vehicle && 'max_weight' in vehicle
+  );
+
   return (
     <div className='relative overflow-hidden h-screen'>
       
@@ -226,6 +235,29 @@ export default function StationPage({ station, onBack }: { station: Station; onB
             />
           </svg>
           Back to Map
+        </button>
+      )}
+
+      {/* Dispatch Button */}
+      {hasLocomotive && onDispatch && (
+        <button
+          onClick={onDispatch}
+          className="absolute top-4 right-4 z-20 bg-green-600/80 hover:bg-green-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
+        >
+          <svg 
+            className="w-5 h-5" 
+            fill="none" 
+            stroke="currentColor" 
+            viewBox="0 0 24 24"
+          >
+            <path 
+              strokeLinecap="round" 
+              strokeLinejoin="round" 
+              strokeWidth={2} 
+              d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" 
+            />
+          </svg>
+          Dispatch Train
         </button>
       )}
 
