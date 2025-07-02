@@ -346,5 +346,17 @@
       "width": 1000,
       "type": "electric",
       "image": "assets/svgs/locomotives/CR450BF.svg"
+    },
+    {
+      "id": 30,
+      "en_name": "cheat code",
+      "loc_name": "cheating",
+      "model": "cheat",
+      "max_speed": 1234,
+      "max_weight": 420000,
+      "weight": 350000,
+      "width": 1000,
+      "type": "electric",
+      "image": "assets/svgs/locomotives/CR450BF.svg"
     }
   ]

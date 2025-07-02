@@ -49,6 +49,8 @@ export default function Map() {
   const [routePolylines, setRoutePolylines] = useState<google.maps.Polyline[]>([]);
   const [existingRoutes, setExistingRoutes] = useState<any[]>([]);
   const [existingRoutePolylines, setExistingRoutePolylines] = useState<google.maps.Polyline[]>([]);
+  const [trainMarkers, setTrainMarkers] = useState<{[routeId: string]: google.maps.Marker}>({});
+  const [routeDataInterval, setRouteDataInterval] = useState<NodeJS.Timeout | null>(null);
 
   const handleLogout = async () => {
     try {
@@ -83,8 +85,9 @@ export default function Map() {
       const data = await response.json();
       
       if (response.ok) {
-        setExistingRoutes(data.routes || []);
-        return data.routes || [];
+        const routes = data.routes || [];
+        setExistingRoutes(routes);
+        return routes;
       } else {
         console.error('Error loading routes:', data.error);
         return [];
@@ -108,8 +111,8 @@ export default function Map() {
         // Create alternating rings by stacking multiple markers
         const createStationMarkers = (level: number) => {
           const stationMarkers = [];
-          const baseSize = 7;
-          const ringSpacing = 1.5;
+          const baseSize = 3;
+          const ringSpacing = 2;
           let currentSize = baseSize + (level + 1) * ringSpacing * 2;
           
           for (let i = 0; i < level; i++) {
@@ -331,8 +334,8 @@ export default function Map() {
         setTrainMetrics(null);
         clearRouteLines();
         
-        // Reload routes to show the new route
-        await loadUserRoutes();
+        // Use comprehensive refresh to show the new route and train marker
+        await refreshAllRouteData();
       } else {
         const error = await response.json();
         alert(`发车失败: ${error.error}`);
@@ -487,7 +490,7 @@ export default function Map() {
               { lat: nextStation.latitude, lng: nextStation.longitude }
             ],
             geodesic: true,
-            strokeColor: '#00ff00', // Green color for existing routes
+            strokeColor: '#fff', // Green color for existing routes
             strokeOpacity: 0.6,
             strokeWeight: 2,
             map: map
@@ -507,6 +510,148 @@ export default function Map() {
     setExistingRoutePolylines([]);
   };
 
+  // Function to display train markers on routes
+  const displayTrainMarkers = (routes: any[]) => {
+    if (!map || isDispatching) return;
+
+    console.log(`Updating train markers for ${routes.length} routes`);
+
+    // Track which routes are still active
+    const activeRouteIds = new Set(routes.filter(route => 
+      route.train_coordinates && 
+      route.train_coordinates.latitude && 
+      route.train_coordinates.longitude &&
+      route.percent_completion < 100
+    ).map(route => route.id));
+
+    // Remove markers for routes that are no longer active
+    Object.keys(trainMarkers).forEach(routeId => {
+      if (!activeRouteIds.has(routeId)) {
+        console.log(`Removing marker for completed/inactive route ${routeId}`);
+        trainMarkers[routeId].setMap(null);
+        
+        // Remove from trainMarkers object
+        const updatedMarkers = { ...trainMarkers };
+        delete updatedMarkers[routeId];
+        setTrainMarkers(updatedMarkers);
+      }
+    });
+
+    const newTrainMarkers: {[routeId: string]: google.maps.Marker} = { ...trainMarkers };
+
+    routes.forEach(route => {
+      // Only show trains that have coordinate data and are in progress
+      if (route.train_coordinates && 
+          route.train_coordinates.latitude && 
+          route.train_coordinates.longitude &&
+          route.percent_completion < 100) {
+        
+        // Check if marker already exists for this route
+        let trainMarker = newTrainMarkers[route.id];
+        
+        if (!trainMarker) {
+          // Create new marker
+          console.log(`Creating new train marker for route ${route.id}`);
+          trainMarker = new google.maps.Marker({
+            position: {
+              lat: route.train_coordinates.latitude,
+              lng: route.train_coordinates.longitude
+            },
+            map: map,
+            title: `Train ${route.id.substring(0, 8)} - ${route.percent_completion.toFixed(1)}% complete - ETA: ${route.eta}`,
+            icon: {
+              url: '/assets/svgs/dock/trains.svg',
+              scaledSize: new google.maps.Size(24, 24),
+              anchor: new google.maps.Point(12, 12)
+            },
+            zIndex: 1000 // Higher z-index to appear above route lines
+          });
+
+          // Add click listener to show route info
+          trainMarker.addListener('click', () => {
+            const routeInfo = `
+              Route: ${route.start_station_id} → ${route.end_station_id}
+              Progress: ${route.percent_completion.toFixed(1)}%
+              ETA: ${route.eta}
+              Started: ${new Date(route.started_at).toLocaleString()}
+            `;
+            
+            // Create info window
+            const infoWindow = new google.maps.InfoWindow({
+              content: `<div style="font-family: monospace; font-size: 12px; white-space: pre-line;">${routeInfo}</div>`
+            });
+            
+            infoWindow.open(map, trainMarker);
+            
+            // Close info window after 3 seconds
+            setTimeout(() => {
+              infoWindow.close();
+            }, 3000);
+          });
+
+          newTrainMarkers[route.id] = trainMarker;
+        } else {
+          // Update existing marker position and title
+          trainMarker.setPosition({
+            lat: route.train_coordinates.latitude,
+            lng: route.train_coordinates.longitude
+          });
+          trainMarker.setTitle(`Train ${route.id.substring(0, 8)} - ${route.percent_completion.toFixed(1)}% complete - ETA: ${route.eta}`);
+        }
+
+        // Store route data on marker
+        (trainMarker as any).routeData = route;
+
+        // Store route data for local calculations
+        (trainMarker as any).routeData = route;
+      }
+    });
+
+    // Update state only if there are changes
+    if (Object.keys(newTrainMarkers).length !== Object.keys(trainMarkers).length ||
+        Object.keys(newTrainMarkers).some(id => !trainMarkers[id])) {
+      setTrainMarkers(newTrainMarkers);
+    }
+  };
+
+
+
+  // Function to clear train markers
+  const clearTrainMarkers = () => {
+    Object.values(trainMarkers).forEach(marker => marker.setMap(null));
+    setTrainMarkers({});
+  };
+
+  // Comprehensive route data refresh function
+  const refreshAllRouteData = async () => {
+    if (!map || isDispatching) return;
+
+    try {
+      console.log('Refreshing all route data from database...');
+      
+      // Clear existing route visualizations
+      clearExistingRouteLines();
+      clearTrainMarkers();
+      
+      // Reload fresh route data
+      const routes = await loadUserRoutes();
+      
+      if (routes && routes.length > 0 && userStations.length > 0) {
+        // Redraw route lines
+        drawExistingRouteLines(routes, userStations);
+        
+        // Display train markers
+        displayTrainMarkers(routes);
+        
+        console.log(`Refreshed ${routes.length} routes with train positions`);
+      } else {
+        console.log('No active routes found');
+      }
+    } catch (error) {
+      console.error('Error refreshing route data:', error);
+    }
+  };
+
   const journeyMetrics = calculateJourneyMetrics();
   
   // Update route lines when route changes
@@ -514,11 +659,13 @@ export default function Map() {
     if (isDispatching) {
       drawRouteLines();
       clearExistingRouteLines(); // Hide existing routes when dispatching
+      clearTrainMarkers(); // Hide train markers when dispatching
     } else {
       clearRouteLines();
       // Redraw existing routes when not dispatching
       if (existingRoutes.length > 0 && userStations.length > 0) {
         drawExistingRouteLines(existingRoutes, userStations);
+        displayTrainMarkers(existingRoutes);
       }
     }
   }, [selectedRoute, startStation, isDispatching, map, existingRoutes, userStations]);
@@ -691,6 +838,7 @@ export default function Map() {
           const routes = await loadUserRoutes();
           if (routes && routes.length > 0 && stations && stations.length > 0) {
             drawExistingRouteLines(routes, stations);
+            displayTrainMarkers(routes);
           }
 
           // Add click listener to map
@@ -734,11 +882,44 @@ export default function Map() {
     initMap();
   }, []);
 
+  
+
+  // Set up route data refresh every 5 minutes (only update mechanism)
+  useEffect(() => {
+    if (!isDispatching && map) {
+      console.log('Setting up 5-minute route data refresh');
+      
+      // Set up comprehensive refresh interval
+      const interval = setInterval(() => {
+        refreshAllRouteData();
+      }, 300000); // Refresh every 5 minutes (300,000ms)
+
+      setRouteDataInterval(interval);
+
+      return () => {
+        clearInterval(interval);
+        setRouteDataInterval(null);
+      };
+    } else {
+      // Clear interval if dispatching
+      if (routeDataInterval) {
+        clearInterval(routeDataInterval);
+        setRouteDataInterval(null);
+      }
+    }
+  }, [isDispatching, map]);
+
   // Cleanup route lines on component unmount
   useEffect(() => {
     return () => {
       clearRouteLines();
       clearExistingRouteLines();
+      clearTrainMarkers();
+      if (routeDataInterval) {
+        clearInterval(routeDataInterval);
+      }
+      // Clear train markers
+      Object.values(trainMarkers).forEach(marker => marker.setMap(null));
     };
   }, []);
 

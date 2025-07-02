@@ -53,15 +53,18 @@ export async function POST(request: NextRequest) {
     }
 
     // Generate UUID for the route
+    const now = new Date().toISOString();
     const { data: routeData, error: routeError } = await supabase
       .from('routes')
       .insert({
         user_id: user.id,
         all_station_ids: allStationIds,
+        all_vehicle_ids: vehicleIds,
         start_station_id: startStationId,
         end_station_id: endStationId,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        started_at: now,
+        created_at: now,
+        updated_at: now
       })
       .select('id')
       .single();
