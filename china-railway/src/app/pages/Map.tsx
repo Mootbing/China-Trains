@@ -47,6 +47,8 @@ export default function Map() {
     isOverweight: boolean;
   } | null>(null);
   const [routePolylines, setRoutePolylines] = useState<google.maps.Polyline[]>([]);
+  const [existingRoutes, setExistingRoutes] = useState<any[]>([]);
+  const [existingRoutePolylines, setExistingRoutePolylines] = useState<google.maps.Polyline[]>([]);
 
   const handleLogout = async () => {
     try {
@@ -73,6 +75,24 @@ export default function Map() {
       console.error('Error loading user stations:', error);
     }
     return [];
+  };
+
+  const loadUserRoutes = async () => {
+    try {
+      const response = await fetch('/api/routes');
+      const data = await response.json();
+      
+      if (response.ok) {
+        setExistingRoutes(data.routes || []);
+        return data.routes || [];
+      } else {
+        console.error('Error loading routes:', data.error);
+        return [];
+      }
+    } catch (error) {
+      console.error('Error loading user routes:', error);
+      return [];
+    }
   };
 
   const [stationMarkers, setStationMarkers] = useState<google.maps.Marker[]>([]);
@@ -310,6 +330,9 @@ export default function Map() {
         setVehicleIds([]);
         setTrainMetrics(null);
         clearRouteLines();
+        
+        // Reload routes to show the new route
+        await loadUserRoutes();
       } else {
         const error = await response.json();
         alert(`发车失败: ${error.error}`);
@@ -430,16 +453,75 @@ export default function Map() {
     setRoutePolylines([]);
   };
 
+  // Function to draw existing route lines
+  const drawExistingRouteLines = (routes: any[], stations: Station[]) => {
+    if (!map || isDispatching) return;
+
+    // Clear existing route polylines
+    existingRoutePolylines.forEach(polyline => polyline.setMap(null));
+    setExistingRoutePolylines([]);
+
+    // Create a map for quick station lookup by ID
+    const stationMap: { [key: string]: Station } = {};
+    stations.forEach(station => {
+      stationMap[station.id] = station;
+    });
+
+    const newPolylines: google.maps.Polyline[] = [];
+
+    routes.forEach(route => {
+      const stationIds = route.all_station_ids || [];
+      
+      // Draw lines between each adjacent pair of stations in the route
+      for (let i = 0; i < stationIds.length - 1; i++) {
+        const currentStation = stationMap[stationIds[i]];
+        const nextStation = stationMap[stationIds[i + 1]];
+
+        if (currentStation && nextStation && 
+            currentStation.latitude && currentStation.longitude && 
+            nextStation.latitude && nextStation.longitude) {
+          
+          const polyline = new google.maps.Polyline({
+            path: [
+              { lat: currentStation.latitude, lng: currentStation.longitude },
+              { lat: nextStation.latitude, lng: nextStation.longitude }
+            ],
+            geodesic: true,
+            strokeColor: '#00ff00', // Green color for existing routes
+            strokeOpacity: 0.6,
+            strokeWeight: 2,
+            map: map
+          });
+
+          newPolylines.push(polyline);
+        }
+      }
+    });
+
+    setExistingRoutePolylines(newPolylines);
+  };
+
+  // Function to clear existing route lines
+  const clearExistingRouteLines = () => {
+    existingRoutePolylines.forEach(polyline => polyline.setMap(null));
+    setExistingRoutePolylines([]);
+  };
+
   const journeyMetrics = calculateJourneyMetrics();
   
   // Update route lines when route changes
   useEffect(() => {
     if (isDispatching) {
       drawRouteLines();
+      clearExistingRouteLines(); // Hide existing routes when dispatching
     } else {
       clearRouteLines();
+      // Redraw existing routes when not dispatching
+      if (existingRoutes.length > 0 && userStations.length > 0) {
+        drawExistingRouteLines(existingRoutes, userStations);
+      }
     }
-  }, [selectedRoute, startStation, isDispatching, map]);
+  }, [selectedRoute, startStation, isDispatching, map, existingRoutes, userStations]);
 
   // Debug logging for journey metrics
   useEffect(() => {
@@ -605,6 +687,12 @@ export default function Map() {
             displayStationsOnMap(stations, mapInstance);
           }
 
+          // Load and display existing routes
+          const routes = await loadUserRoutes();
+          if (routes && routes.length > 0 && stations && stations.length > 0) {
+            drawExistingRouteLines(routes, stations);
+          }
+
           // Add click listener to map
           mapInstance.addListener('click', async (event: google.maps.MapMouseEvent) => {
             if (event.latLng) {
@@ -650,6 +738,7 @@ export default function Map() {
   useEffect(() => {
     return () => {
       clearRouteLines();
+      clearExistingRouteLines();
     };
   }, []);
 
