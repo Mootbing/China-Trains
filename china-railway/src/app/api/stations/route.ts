@@ -37,15 +37,15 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
-    const stationName = searchParams.get('name');
+    const stationId = searchParams.get('id');
 
-    if (stationName) {
-      // Check if specific station exists for this user and location
+    if (stationId) {
+      // Check if specific station exists for this user and ID
       const { data, error } = await supabase
         .from('stations')
         .select('*')
         .eq('user_id', user.id)
-        .eq('name', stationName)
+        .eq('id', stationId)
         .single();
 
       if (error && error.code !== 'PGRST116') {

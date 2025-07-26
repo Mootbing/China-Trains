@@ -144,12 +144,13 @@ Content-Type: application/json
 
 ### GET `/api/stations`
 
-**Purpose**: Get all stations for the current user or check if a specific station exists
+**Purpose**: Get all stations for the current user or get a specific station by ID
 
 **Query Parameters**:
-- `name` (optional): Station name to check for existence
+- `id` (optional): Station ID to retrieve a specific station
+- `name` (deprecated): Station name to check for existence (use ID instead)
 
-**Response when no name provided (get all stations)**:
+**Response when no ID provided (get all stations)**:
 ```json
 {
   "stations": [
@@ -168,7 +169,7 @@ Content-Type: application/json
 }
 ```
 
-**Response when name provided (check specific station)**:
+**Response when ID provided (get specific station)**:
 ```json
 {
   "exists": true,
@@ -251,9 +252,21 @@ The `playerUtils` object provides the following functions:
 
 The `stationUtils` object provides the following functions:
 
-- `checkStation(name)`: Checks if a station exists at a location
+- `getStationById(id)`: Gets a specific station by its ID
+- `checkStation(name)`: Checks if a station exists by name (deprecated, use getStationById instead)
 - `getAllStations()`: Fetches all stations for the current user
 - `createStation(name, loc_name, level, latitude, longitude)`: Creates a new station with coordinates
+
+### Station Routing
+
+Stations can now be accessed via URL routing:
+
+- **Station Page**: `/station/[id]` - View and manage a specific station by ID
+- **Map with Station Parameter**: `/?station=[id]` - Map view with station selection
+
+**Example URLs**:
+- `/station/uuid-123` - Direct access to station with ID "uuid-123"
+- `/?station=uuid-123` - Map view with station "uuid-123" highlighted
 
 ## Middleware
 

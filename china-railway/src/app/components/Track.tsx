@@ -52,7 +52,7 @@ const Track: React.FC<TrackProps> = ({
               {Array.from({ length: getPantographCount() }, (_, index) => (
                 <img
                   key={index}
-                  src={level === 0 ? "./assets/svgs/track/pantograph.svg" : "./assets/svgs/track/pantograph-2.svg"}
+                  src={level === 0 ? "/assets/svgs/track/pantograph.svg" : "/assets/svgs/track/pantograph-2.svg"}
                   alt="Pantograph"
                   style={{ width: railSize, transform: `translateX(${pantographOffset * index}px) translateY(-10%)` }}
                 />
@@ -96,7 +96,7 @@ const Track: React.FC<TrackProps> = ({
             {Array.from({ length: numRails }, (_, index) => (
               <img
                 key={index}
-                src="./assets/svgs/track/rail.svg"
+                src="/assets/svgs/track/rail.svg"
                 alt="Rail track"
                 style={{ width: railSize }}
               />

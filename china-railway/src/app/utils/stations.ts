@@ -11,9 +11,9 @@ export interface Station {
 }
 
 export const stationUtils = {
-  async checkStation(name: string): Promise<{ exists: boolean; station?: Station; error?: string }> {
+  async getStationById(id: string): Promise<{ exists: boolean; station?: Station; error?: string }> {
     try {
-      const response = await fetch(`/api/stations?name=${encodeURIComponent(name)}`);
+      const response = await fetch(`/api/stations?id=${encodeURIComponent(id)}`);
       const data = await response.json();
       
       if (response.ok) {
@@ -22,8 +22,27 @@ export const stationUtils = {
           station: data.station
         };
       } else {
-        return { exists: false, error: data.error || 'Failed to check station' };
+        return { exists: false, error: data.error || 'Failed to get station' };
       }
+    } catch (error) {
+      console.error('Error getting station:', error);
+      return { exists: false, error: 'Failed to get station' };
+    }
+  },
+
+  async checkStation(name: string): Promise<{ exists: boolean; station?: Station; error?: string }> {
+    try {
+      // For backward compatibility, we'll fetch all stations and find by name
+      const { stations, error } = await this.getAllStations();
+      if (error) {
+        return { exists: false, error };
+      }
+      
+      const station = stations?.find(s => s.name === name);
+      return { 
+        exists: !!station,
+        station: station
+      };
     } catch (error) {
       console.error('Error checking station:', error);
       return { exists: false, error: 'Failed to check station' };

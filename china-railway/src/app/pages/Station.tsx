@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from 'react';
 import Track from '../components/Track';
 import Train from '../components/Train';
+import ArrivalBoard from '../components/ArrivalBoard';
 import { Station } from '../utils/stations';
 import locomotives from '../../../public/assets/data/locomotives.json';
 import cars from '../../../public/assets/data/cars.json';
@@ -48,9 +49,11 @@ export default function StationPage({ station, onBack, onDispatch }: {
   onDispatch?: (startingStation: Station, vehicleIds?: number[], trainMetrics?: TrainMetrics) => void;
 }) {
   const [groupedVehicles, setGroupedVehicles] = useState<GroupedVehicle[]>([]);
+  const [showArrivalBoard, setShowArrivalBoard] = useState(false);
   const [availableCounts, setAvailableCounts] = useState<Record<string, number>>({});
   const [availableDatabaseIds, setAvailableDatabaseIds] = useState<Record<string, string[]>>({});
   const [trainConsist, setTrainConsist] = useState<(LocomotiveType | Car)[]>([]);
+  const [isLoadingVehicles, setIsLoadingVehicles] = useState(true);
   const scrollableContainerRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -114,6 +117,7 @@ export default function StationPage({ station, onBack, onDispatch }: {
     if (station) {
       const fetchVehicles = async () => {
         try {
+          setIsLoadingVehicles(true);
           const response = await fetch(`/api/player/vehicles?station_id=${station.id}`);
           if (response.ok) {
             const data: VehicleFromDB[] = await response.json();
@@ -191,6 +195,8 @@ export default function StationPage({ station, onBack, onDispatch }: {
           }
         } catch (error) {
           console.error('Error fetching vehicles:', error);
+        } finally {
+          setIsLoadingVehicles(false);
         }
       };
 
@@ -273,7 +279,7 @@ export default function StationPage({ station, onBack, onDispatch }: {
           weight: draggedVehicle.weight,
           width: draggedVehicle.width,
           type: draggedVehicle.type as 'electric' | 'diesel' | 'steam',
-          image: draggedVehicle.image,
+          image: draggedVehicle.image.startsWith('/') ? draggedVehicle.image : `/${draggedVehicle.image}`,
           database_id: selectedDatabaseId,
         } as LocomotiveType & { database_id: string };
       } else {
@@ -286,7 +292,7 @@ export default function StationPage({ station, onBack, onDispatch }: {
           weight: draggedVehicle.weight,
           width: draggedVehicle.width,
           type_info: (cars as any[]).find(c => c.id === draggedVehicle.id)?.type_info || {},
-          image: draggedVehicle.image,
+          image: draggedVehicle.image.startsWith('/') ? draggedVehicle.image : `/${draggedVehicle.image}`,
           database_id: selectedDatabaseId,
         } as Car & { database_id: string };
       }
@@ -361,7 +367,7 @@ export default function StationPage({ station, onBack, onDispatch }: {
             console.log('Train metrics being passed:', trainMetrics);
             onDispatch(station, vehicleIds, trainMetrics);
           }}
-          className="absolute top-4 right-4 z-20 bg-green-600/80 hover:bg-green-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
+          className="absolute top-4 right-4 z-20 bg-white text-black px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
         >
           <svg 
             className="w-5 h-5" 
@@ -379,6 +385,29 @@ export default function StationPage({ station, onBack, onDispatch }: {
           发车
         </button>
       )}
+
+      {/* Arrival Board Button */}
+      <button
+        onClick={() => setShowArrivalBoard(true)}
+        className={`absolute top-4 z-20 bg-blue-500/80 hover:bg-blue-500 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors ${
+          hasLocomotive && onDispatch ? 'right-32' : 'right-4'
+        }`}
+      >
+        <svg 
+          className="w-5 h-5" 
+          fill="none" 
+          stroke="currentColor" 
+          viewBox="0 0 24 24"
+        >
+          <path 
+            strokeLinecap="round" 
+            strokeLinejoin="round" 
+            strokeWidth={2} 
+            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" 
+          />
+        </svg>
+        线路
+      </button>
 
       {/* Station Title */}
       <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-20 bg-black/50 text-white px-6 py-2 rounded-lg">
@@ -438,37 +467,67 @@ export default function StationPage({ station, onBack, onDispatch }: {
 
       <div
         ref={scrollableContainerRef}
-        className="absolute bottom-0 w-full overflow-x-auto whitespace-nowrap py-4 cursor-grab"
-        onMouseDown={onMouseDown}
-        onMouseLeave={onMouseLeave}
-        onMouseUp={onMouseUp}
-        onMouseMove={onMouseMove}
+        className={`absolute bottom-0 w-full overflow-x-auto whitespace-nowrap py-4 ${isLoadingVehicles ? 'cursor-default' : 'cursor-grab'}`}
+        onMouseDown={isLoadingVehicles ? undefined : onMouseDown}
+        onMouseLeave={isLoadingVehicles ? undefined : onMouseLeave}
+        onMouseUp={isLoadingVehicles ? undefined : onMouseUp}
+        onMouseMove={isLoadingVehicles ? undefined : onMouseMove}
       >
-        <div className="inline-flex space-x-4 px-4">
-          {groupedVehicles
-            .filter(({ vehicle }) => availableCounts[vehicle.model] > 0)
-            .map(({ vehicle }, index) => (
-            <div 
-              key={index} 
-              className="relative inline-block bg-white/5 p-2 rounded-lg shadow cursor-move"
-              draggable
-              onDragStart={(e) => handleDragStart(e, vehicle)}
-            >
-              {availableCounts[vehicle.model] > 1 && (
-                <div className="absolute top-0 right-0 -mt-2 -mr-2 bg-white/10 text-white rounded-full h-6 w-6 flex items-center justify-center text-xs font-bold z-10">
-                  x{availableCounts[vehicle.model]}
-                </div>
-              )}
-              <img
-                src={`/${vehicle.image}`}
-                alt={vehicle.loc_name}
-                className="h-20 object-contain pointer-events-none"
-              />
-              <div className="text-center mt-2 text-sm font-semibold">{vehicle.loc_name}</div>
+        {isLoadingVehicles ? (
+          // Loading spinner
+          <div className="flex items-center justify-center h-32">
+            <div className="flex flex-col items-center">
+              <div className="w-8 h-8 border-2 border-white/30 border-t-white rounded-full animate-spin mb-3"></div>
+              <p className="text-white text-sm">正在加载列车...</p>
             </div>
-          ))}
-        </div>
+          </div>
+        ) : groupedVehicles.filter(({ vehicle }) => availableCounts[vehicle.model] > 0).length === 0 ? (
+          // No trains message
+          <div className="flex items-center justify-center h-32">
+            <div className="text-center">
+              <svg className="w-12 h-12 text-white/50 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <p className="text-white/70 text-lg font-medium">本站暂无列车</p>
+              <p className="text-white/50 text-sm mt-1">No trains at this stop right now</p>
+            </div>
+          </div>
+        ) : (
+          // Vehicle list
+          <div className="inline-flex space-x-4 px-4">
+            {groupedVehicles
+              .filter(({ vehicle }) => availableCounts[vehicle.model] > 0)
+              .map(({ vehicle }, index) => (
+              <div 
+                key={index} 
+                className="relative inline-block bg-white/5 p-2 rounded-lg shadow cursor-move"
+                draggable
+                onDragStart={(e) => handleDragStart(e, vehicle)}
+              >
+                {availableCounts[vehicle.model] > 1 && (
+                  <div className="absolute top-0 right-0 -mt-2 -mr-2 bg-white/10 text-white rounded-full h-6 w-6 flex items-center justify-center text-xs font-bold z-10">
+                    x{availableCounts[vehicle.model]}
+                  </div>
+                )}
+                <img
+                  src={`/${vehicle.image}`}
+                  alt={vehicle.loc_name}
+                  className="h-20 object-contain pointer-events-none"
+                />
+                <div className="text-center mt-2 text-sm font-semibold">{vehicle.loc_name}</div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
+
+      {/* Arrival Board */}
+      <ArrivalBoard
+        isOpen={showArrivalBoard}
+        onClose={() => setShowArrivalBoard(false)}
+        stationId={station.id}
+        stations={[station]} // Pass current station for context, ArrivalBoard will fetch all stations if needed
+      />
     </div>
   );
 }

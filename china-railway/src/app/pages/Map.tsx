@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Loader } from '@googlemaps/js-api-loader';
 import { useAuth } from '../contexts/AuthContext';
 import { usePlayer } from '../contexts/PlayerContext';
@@ -9,6 +10,9 @@ import Dock from '../components/Dock';
 import DockButton from '../components/DockButton';
 import TopDock from '../components/TopDock';
 import StationPurchaseModal from '../components/StationPurchaseModal';
+import ArrivalBoard from '../components/ArrivalBoard';
+import StationBoard from '../components/StationBoard';
+import TrainDashboard from '../components/TrainDashboard';
 import StationPage from './Station';
 
 interface PendingStation {
@@ -24,6 +28,8 @@ export default function Map() {
   const [userStations, setUserStations] = useState<Station[]>([]);
   const { signOut } = useAuth();
   const { player, addMoney } = usePlayer();
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [pendingStation, setPendingStation] = useState<PendingStation | null>(null);
   const [isPurchasing, setIsPurchasing] = useState(false);
@@ -51,6 +57,9 @@ export default function Map() {
   const [existingRoutePolylines, setExistingRoutePolylines] = useState<google.maps.Polyline[]>([]);
   const [trainMarkers, setTrainMarkers] = useState<{[routeId: string]: google.maps.Marker}>({});
   const [routeDataInterval, setRouteDataInterval] = useState<NodeJS.Timeout | null>(null);
+  const [showArrivalBoard, setShowArrivalBoard] = useState(false);
+  const [showStationBoard, setShowStationBoard] = useState(false);
+  const [showTrainDashboard, setShowTrainDashboard] = useState(false);
 
   const handleLogout = async () => {
     try {
@@ -173,12 +182,12 @@ export default function Map() {
             return prev; // Don't add duplicate consecutive stations
           });
         } else {
-          setSelectedStation(station);
-          setShowStationPage(true);
+          // Navigate to station page by ID
+          router.push(`/station/${station.id}`);
         }
       });
     });
-  }, [isDispatching, stationMarkers]);
+  }, [isDispatching, stationMarkers, router]);
 
   const handleLocationClick = async (placeName: string, locName: string, latLng: google.maps.LatLng) => {
     try {
@@ -276,6 +285,10 @@ export default function Map() {
     setTrainMetrics(null);
   };
 
+  const navigateToStation = (stationId: string) => {
+    router.push(`/station/${stationId}`);
+  };
+
   const handleDispatch = (startingStation: Station, vehicleIdList: number[] = [], metrics?: any) => {
     setShowStationPage(false);
     setSelectedStation(null);
@@ -293,6 +306,34 @@ export default function Map() {
     setVehicleIds([]);
     setTrainMetrics(null);
     clearRouteLines();
+  };
+
+  const handleShowArrivalBoard = () => {
+    setShowArrivalBoard(true);
+  };
+
+  const handleCloseArrivalBoard = () => {
+    setShowArrivalBoard(false);
+  };
+
+  const handleShowStationBoard = () => {
+    setShowStationBoard(true);
+  };
+
+  const handleCloseStationBoard = () => {
+    setShowStationBoard(false);
+  };
+
+  const handleShowTrainDashboard = () => {
+    setShowTrainDashboard(true);
+  };
+
+  const handleCloseTrainDashboard = () => {
+    setShowTrainDashboard(false);
+  };
+
+  const handleSelectStation = (stationId: string) => {
+    router.push(`/station/${stationId}`);
   };
 
   const handleDeleteLastStation = () => {
@@ -354,8 +395,8 @@ export default function Map() {
       );
       
       if (newStation) {
-        setSelectedStation(newStation);
-        setShowStationPage(true);
+        // Navigate to the station using the new URL-based routing
+        navigateToStation(newStation.id);
         setIsModalOpen(false);
         setPendingStation(null);
         setPurchaseSuccess(undefined);
@@ -653,6 +694,60 @@ export default function Map() {
   };
 
   const journeyMetrics = calculateJourneyMetrics();
+
+  // Handle URL parameters for station navigation
+  useEffect(() => {
+    const stationId = searchParams.get('station');
+    if (stationId && userStations.length > 0) {
+      const station = userStations.find(s => s.id === stationId);
+      if (station) {
+        router.push(`/station/${stationId}`);
+      }
+    }
+  }, [searchParams, userStations, router]);
+
+  // Handle pending dispatch from localStorage
+  useEffect(() => {
+    const dispatchParam = searchParams.get('dispatch');
+    if (dispatchParam === 'true') {
+      try {
+        const pendingDispatchData = localStorage.getItem('pendingDispatch');
+        if (pendingDispatchData) {
+          const dispatchData = JSON.parse(pendingDispatchData);
+          
+          // Check if the data is recent (within 5 minutes to avoid stale data)
+          const fiveMinutesAgo = Date.now() - (5 * 60 * 1000);
+          if (dispatchData.timestamp && dispatchData.timestamp > fiveMinutesAgo) {
+            // Set up the dispatch state
+            setIsDispatching(true);
+            setStartStation(dispatchData.startingStation);
+            setVehicleIds(dispatchData.vehicleIds || []);
+            setTrainMetrics(dispatchData.trainMetrics || null);
+            setSelectedRoute([]); // Start with empty route, user will select destination
+            
+            // Clear the localStorage data
+            localStorage.removeItem('pendingDispatch');
+            
+            // Update URL to remove the dispatch parameter
+            router.replace('/');
+            
+            // Show notification that dispatch was resumed
+            setTimeout(() => {
+              alert(`已恢复从 ${dispatchData.startingStation.loc_name || dispatchData.startingStation.name} 的发车准备。请选择目的地站点。`);
+            }, 500);
+            
+            console.log('Resumed dispatch from station:', dispatchData.startingStation.name);
+          } else {
+            // Clear stale data
+            localStorage.removeItem('pendingDispatch');
+          }
+        }
+      } catch (error) {
+        console.error('Error loading pending dispatch:', error);
+        localStorage.removeItem('pendingDispatch');
+      }
+    }
+  }, [searchParams, router]);
   
   // Update route lines when route changes
   useEffect(() => {
@@ -938,9 +1033,9 @@ export default function Map() {
         {!isDispatching && <><TopDock />
         {/* Dock at the bottom */}
         <Dock>
-          <DockButton svgUrl="/assets/svgs/dock/trains.svg" label="车" />
-          <DockButton svgUrl="/assets/svgs/dock/stations.svg" label="站" />
-          <DockButton svgUrl="/assets/svgs/dock/routes.svg" label="线" />
+          <DockButton svgUrl="/assets/svgs/dock/trains.svg" label="车" onClick={handleShowTrainDashboard} />
+          <DockButton svgUrl="/assets/svgs/dock/stations.svg" label="站" onClick={handleShowStationBoard} />
+          <DockButton svgUrl="/assets/svgs/dock/routes.svg" label="线" onClick={handleShowArrivalBoard} />
           <DockButton svgUrl="/assets/svgs/dock/logout.svg" label="退" onClick={handleLogout} />
         </Dock>
 
@@ -955,6 +1050,26 @@ export default function Map() {
           isPurchasing={isPurchasing}
           purchaseSuccess={purchaseSuccess}
           onViewStation={handleViewStation}
+        />
+
+        {/* Arrival Board */}
+        <ArrivalBoard
+          isOpen={showArrivalBoard}
+          onClose={handleCloseArrivalBoard}
+          stations={userStations}
+        />
+
+        {/* Station Board */}
+        <StationBoard
+          isOpen={showStationBoard}
+          onClose={handleCloseStationBoard}
+          onSelectStation={handleSelectStation}
+        />
+
+        {/* Train Dashboard */}
+        <TrainDashboard
+          isOpen={showTrainDashboard}
+          onClose={handleCloseTrainDashboard}
         /></>}
       </div>
 
