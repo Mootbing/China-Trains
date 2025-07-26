@@ -22,6 +22,7 @@ interface TrainMetrics {
 
 const TrainRunning: React.FC<TrainRunningProps> = ({ route, onBack }) => {
   const [showTimetable, setShowTimetable] = useState(false);
+  const [vibrationOffset, setVibrationOffset] = useState({ x: 0, y: 0 });
   const router = useRouter();
 
   if (!route) {
@@ -70,6 +71,23 @@ const TrainRunning: React.FC<TrainRunningProps> = ({ route, onBack }) => {
 
   const trainMetrics = calculateTrainMetrics();
 
+  // Add subtle vibration effect for high speeds
+  useEffect(() => {
+    if (trainMetrics.effectiveSpeed > 80) {
+      const intensity = Math.min((trainMetrics.effectiveSpeed - 80) / 100, 1);
+      const interval = setInterval(() => {
+        setVibrationOffset({
+          x: (Math.random() - 0.5) * intensity * 2,
+          y: (Math.random() - 0.5) * intensity * 1
+        });
+      }, 50);
+
+      return () => clearInterval(interval);
+    } else {
+      setVibrationOffset({ x: 0, y: 0 });
+    }
+  }, [trainMetrics.effectiveSpeed]);
+
   const formatTime = (hours: number) => {
     const h = Math.floor(hours);
     const m = Math.floor((hours - h) * 60);
@@ -78,7 +96,13 @@ const TrainRunning: React.FC<TrainRunningProps> = ({ route, onBack }) => {
   };
 
   return (
-    <div className='relative overflow-hidden h-screen'>
+    <div 
+      className='relative overflow-hidden h-screen'
+      style={{
+        transform: `translate(${vibrationOffset.x}px, ${vibrationOffset.y}px)`,
+        transition: 'none'
+      }}
+    >
       
       {/* Back Button */}
       <button
@@ -185,11 +209,30 @@ const TrainRunning: React.FC<TrainRunningProps> = ({ route, onBack }) => {
         </div>
       </div>
 
+      {/* Speed indicator */}
+      <div className="absolute bottom-4 right-4 z-20 bg-black/70 text-white px-4 py-2 rounded-lg">
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1">
+            <div className={`w-2 h-2 rounded-full ${trainMetrics.effectiveSpeed > 0 ? 'bg-green-400 animate-pulse' : 'bg-gray-400'}`} />
+            <span className="text-sm font-mono">
+              {Math.round(trainMetrics.effectiveSpeed)} km/h
+            </span>
+          </div>
+          {trainMetrics.isOverweight && (
+            <div className="text-red-400 text-xs">
+              超重
+            </div>
+          )}
+        </div>
+      </div>
+
       {/* Track with Train */}
       <div className="absolute bottom-0 w-full">
         <Track 
           className="bottom-50"
           electrified={true}
+          speed={trainMetrics.effectiveSpeed}
+          isMoving={true}
           train={
             route.vehicles && route.vehicles.length > 0 ? (
               <Train 
@@ -205,7 +248,7 @@ const TrainRunning: React.FC<TrainRunningProps> = ({ route, onBack }) => {
       {/* Timetable Modal */}
       {showTimetable && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-black/90 border border-white/20 rounded-lg max-w-2xl w-full max-h-[80vh] overflow-hidden">
+          <div className="bg-black/90 border border-white/20 rounded-lg w-full h-full overflow-hidden">
             <div className="border-b border-white/20 p-4 bg-white/5 flex justify-between items-center">
               <h2 className="text-xl font-bold text-white">列车时刻表</h2>
               <button
@@ -218,16 +261,21 @@ const TrainRunning: React.FC<TrainRunningProps> = ({ route, onBack }) => {
               </button>
             </div>
             
-            <div className="overflow-y-auto max-h-[60vh] p-4">
+            <div className="overflow-hidden h-full p-4">
               <div className="space-y-2">
                 {route.timetable?.map((stop: any, index: number) => (
                   <div
                     key={stop.station?.id || index}
-                    className={`flex justify-between items-center p-3 rounded-lg border border-white/10 transition-colors ${
+                    onClick={() => {
+                      if (stop.station?.id) {
+                        router.push(`/station/${stop.station.id}`);
+                      }
+                    }}
+                    className={`flex justify-between items-center p-3 rounded-lg border border-white/10 transition-colors cursor-pointer ${
                       stop.isPassed 
-                        ? 'bg-white/5 text-white/60' 
+                        ? 'bg-white/5 text-white/60 hover:bg-white/8' 
                         : stop.isNext 
-                        ? 'bg-white/10 border-2 border-blue-400 text-white' 
+                        ? 'bg-white/10 border-2 border-blue-400 text-white hover:bg-white/15' 
                         : 'bg-white/5 text-white/90 hover:bg-white/10'
                     }`}
                   >

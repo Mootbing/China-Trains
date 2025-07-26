@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Station } from '../utils/stations';
 
 interface RouteData {
@@ -35,6 +36,7 @@ interface ArrivalBoardProps {
 }
 
 export default function ArrivalBoard({ isOpen, onClose, stationId, stations }: ArrivalBoardProps) {
+  const router = useRouter();
   const [arrivals, setArrivals] = useState<ArrivalData[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedStation, setSelectedStation] = useState<Station | null>(null);
@@ -105,7 +107,7 @@ export default function ArrivalBoard({ isOpen, onClose, stationId, stations }: A
               
               processedArrivals.push({
                 routeId: route.id,
-                trainNumber: `Train ${route.id.substring(0, 8)}`,
+                trainNumber: `${route.id.substring(0, 8)}`,
                 fromStation: fromStationName,
                 arrivalTime: route.eta,
                 status: route.percent_completion > 90 ? 'arriving' : 'in_transit',
@@ -126,7 +128,7 @@ export default function ArrivalBoard({ isOpen, onClose, stationId, stations }: A
               
               processedArrivals.push({
                 routeId: route.id,
-                trainNumber: `Train ${route.id.substring(0, 8)}`,
+                trainNumber: `${route.id.substring(0, 8)}`,
                 fromStation: `${fromStationName} → ${toStationName}`,
                 arrivalTime: route.eta,
                 status: route.percent_completion > 90 ? 'arriving' : 'in_transit',
@@ -259,6 +261,10 @@ export default function ArrivalBoard({ isOpen, onClose, stationId, stations }: A
     }
   };
 
+  const handleRowClick = (routeId: string) => {
+    router.push(`/routes/${routeId}`);
+  };
+
   return (
     <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
       <div className="bg-black/90 border border-white/20 rounded-lg w-full max-w-4xl max-h-[80vh] overflow-hidden">
@@ -384,7 +390,8 @@ export default function ArrivalBoard({ isOpen, onClose, stationId, stations }: A
               {sortedArrivals.map((arrival) => (
                 <div
                   key={arrival.routeId}
-                  className="grid grid-cols-12 gap-4 py-3 px-4 bg-white/5 hover:bg-white/10 rounded-lg transition-colors border border-white/10"
+                  onClick={() => handleRowClick(arrival.routeId)}
+                  className="grid grid-cols-12 gap-4 py-3 px-4 bg-white/5 hover:bg-white/10 rounded-lg transition-colors border border-white/10 cursor-pointer"
                 >
                   <div className="col-span-2">
                     <div className="font-mono text-white font-medium">

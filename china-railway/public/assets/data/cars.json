@@ -10,7 +10,7 @@
       "type_info": {
         "seats": 120
       },
-      "image": "assets/svgs/cars/YZ.svg"
+      "image": "/assets/svgs/cars/YZ.svg"
     },
     {
       "id": 2,
@@ -23,7 +23,7 @@
       "type_info": {
         "seats": 104
       },
-      "image": "assets/svgs/cars/RZ.svg"
+      "image": "/assets/svgs/cars/RZ.svg"
     },
     {
       "id": 3,
@@ -36,7 +36,7 @@
       "type_info": {
         "seats": 66
       },
-      "image": "assets/svgs/cars/YW.svg"
+      "image": "/assets/svgs/cars/YW.svg"
     },
     {
       "id": 4,
@@ -49,7 +49,7 @@
       "type_info": {
         "seats": 36
       },
-      "image": "assets/svgs/cars/RW.svg"
+      "image": "/assets/svgs/cars/RW.svg"
     },
     {
       "id": 5,
@@ -62,7 +62,7 @@
       "type_info": {
         "seats": 20
       },
-      "image": "assets/svgs/cars/GRW.svg"
+      "image": "/assets/svgs/cars/GRW.svg"
     },
     {
       "id": 6,
@@ -75,7 +75,7 @@
       "type_info": {
         "cargo_weight": 70000
       },
-      "image": "assets/svgs/cars/F.svg"
+      "image": "/assets/svgs/cars/F.svg"
     },
     {
       "id": 7,
@@ -88,7 +88,7 @@
       "type_info": {
         "cargo_weight": 70000
       },
-      "image": "assets/svgs/cars/S.svg"
+      "image": "/assets/svgs/cars/S.svg"
     },
     {
       "id": 8,
@@ -101,7 +101,7 @@
       "type_info": {
         "cargo_weight": 70000
       },
-      "image": "assets/svgs/cars/E.svg"
+      "image": "/assets/svgs/cars/E.svg"
     },
     {
       "id": 9,
@@ -114,7 +114,7 @@
       "type_info": {
         "cargo_weight": 50000
       },
-      "image": "assets/svgs/cars/T.svg"
+      "image": "/assets/svgs/cars/T.svg"
     },
     {
       "id": 10,
@@ -127,7 +127,7 @@
       "type_info": {
         "cargo_weight": 60000
       },
-      "image": "assets/svgs/cars/Z.svg"
+      "image": "/assets/svgs/cars/Z.svg"
     },
     {
       "id": 11,
@@ -140,6 +140,6 @@
       "type_info": {
         "cargo_weight": 60000
       },
-      "image": "assets/svgs/cars/U.svg"
+      "image": "/assets/svgs/cars/U.svg"
     }
   ]

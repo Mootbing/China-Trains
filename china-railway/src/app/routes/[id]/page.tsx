@@ -48,7 +48,7 @@ export default function RoutePage({ params }: RoutePageProps) {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-sky-400 to-sky-600 flex flex-col items-center justify-center">
+      <div className="min-h-screen flex flex-col items-center justify-center">
         <div className="text-white text-xl">加载中...</div>
       </div>
     );
@@ -56,7 +56,7 @@ export default function RoutePage({ params }: RoutePageProps) {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-sky-400 to-sky-600 flex flex-col items-center justify-center">
+      <div className="min-h-screen flex flex-col items-center justify-center">
         <div className="text-white text-xl mb-4">错误: {error}</div>
         <button
           onClick={handleBack}

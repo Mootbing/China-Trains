@@ -362,7 +362,7 @@ export default function StationPage({ station, onBack, onDispatch }: {
         {/* Arrival Board Button */}
         <button
           onClick={() => setShowArrivalBoard(true)}
-          className="bg-blue-500/80 hover:bg-blue-500 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors whitespace-nowrap"
+          className="border-1 border-white text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors whitespace-nowrap"
         >
           <svg 
             className="w-5 h-5" 
@@ -377,7 +377,7 @@ export default function StationPage({ station, onBack, onDispatch }: {
               d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" 
             />
           </svg>
-          线路
+          到达信息
         </button>
 
         {/* Dispatch Button */}
@@ -511,7 +511,7 @@ export default function StationPage({ station, onBack, onDispatch }: {
                   </div>
                 )}
                 <img
-                  src={`/${vehicle.image}`}
+                  src={`${vehicle.image}`}
                   alt={vehicle.loc_name}
                   className="h-20 object-contain pointer-events-none"
                 />

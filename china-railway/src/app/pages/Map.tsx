@@ -736,9 +736,9 @@ export default function Map() {
             router.replace('/');
             
             // Show notification that dispatch was resumed
-            setTimeout(() => {
-              alert(`已恢复从 ${dispatchData.startingStation.loc_name || dispatchData.startingStation.name} 的发车准备。请选择目的地站点。`);
-            }, 500);
+            // setTimeout(() => {
+            //   alert(`已恢复从 ${dispatchData.startingStation.loc_name || dispatchData.startingStation.name} 的发车准备。请选择目的地站点。`);
+            // }, 500);
             
             console.log('Resumed dispatch from station:', dispatchData.startingStation.name);
           } else {

@@ -9,7 +9,7 @@
       "weight": 138000,
       "width": 1000,
       "type": "diesel",
-      "image": "assets/svgs/locomotives/DF.svg"
+      "image": "/assets/svgs/locomotives/DF.svg"
     },
     {
       "id": 2,
@@ -21,7 +21,7 @@
       "weight": 138000,
       "width": 1000,
       "type": "diesel",
-      "image": "assets/svgs/locomotives/DF4.svg"
+      "image": "/assets/svgs/locomotives/DF4.svg"
     },
     {
       "id": 3,
@@ -33,7 +33,7 @@
       "weight": 138000,
       "width": 1000,
       "type": "diesel",
-      "image": "assets/svgs/locomotives/DF11.svg"
+      "image": "/assets/svgs/locomotives/DF11.svg"
     },
     {
       "id": 4,
@@ -45,7 +45,7 @@
       "weight": 276000,
       "width": 1000,
       "type": "diesel",
-      "image": "assets/svgs/locomotives/DF11G.svg"
+      "image": "/assets/svgs/locomotives/DF11G.svg"
     },
     {
       "id": 5,
@@ -57,7 +57,7 @@
       "weight": 184000,
       "width": 1000,
       "type": "electric",
-      "image": "assets/svgs/locomotives/HXD1.svg"
+      "image": "/assets/svgs/locomotives/HXD1.svg"
     },
     {
       "id": 6,
@@ -69,7 +69,7 @@
       "weight": 126000,
       "width": 1000,
       "type": "electric",
-      "image": "assets/svgs/locomotives/HXD1D.svg"
+      "image": "/assets/svgs/locomotives/HXD1D.svg"
     },
     {
       "id": 7,
@@ -81,7 +81,7 @@
       "weight": 126000,
       "width": 1000,
       "type": "electric",
-      "image": "assets/svgs/locomotives/SS1.svg"
+      "image": "/assets/svgs/locomotives/SS1.svg"
     },
     {
       "id": 8,
@@ -93,7 +93,7 @@
       "weight": 88000,
       "width": 1000,
       "type": "electric",
-      "image": "assets/svgs/locomotives/SS8.svg"
+      "image": "/assets/svgs/locomotives/SS8.svg"
     },
     {
       "id": 9,
@@ -105,7 +105,7 @@
       "weight": 126000,
       "width": 1000,
       "type": "electric",
-      "image": "assets/svgs/locomotives/SS9.svg"
+      "image": "/assets/svgs/locomotives/SS9.svg"
     },
     {
       "id": 10,
@@ -117,7 +117,7 @@
       "weight": 138000,
       "width": 1000,
       "type": "electric",
-      "image": "assets/svgs/locomotives/6K.svg"
+      "image": "/assets/svgs/locomotives/6K.svg"
     },
     {
       "id": 11,
@@ -129,7 +129,7 @@
       "weight": 340000,
       "width": 1000,
       "type": "electric",   
-      "image": "assets/svgs/locomotives/CRH1A.svg"
+      "image": "/assets/svgs/locomotives/CRH1A.svg"
     },
     {
       "id": 12,
@@ -141,7 +141,7 @@
       "weight": 680000,
       "width": 1000,
       "type": "electric",
-      "image": "assets/svgs/locomotives/CRH1B.svg"
+      "image": "/assets/svgs/locomotives/CRH1B.svg"
     },
     {
       "id": 13,
@@ -153,7 +153,7 @@
       "weight": 680000,
       "width": 1000,
       "type": "electric",
-      "image": "assets/svgs/locomotives/CRH1E.svg"
+      "image": "/assets/svgs/locomotives/CRH1E.svg"
     },
     {
       "id": 14,
@@ -165,7 +165,7 @@
       "weight": 340000,
       "width": 1000,
       "type": "electric",
-      "image": "assets/svgs/locomotives/CRH2A.svg"
+      "image": "/assets/svgs/locomotives/CRH2A.svg"
     },
     {
       "id": 15,
@@ -177,7 +177,7 @@
       "weight": 680000,
       "width": 1000,
       "type": "electric",
-      "image": "assets/svgs/locomotives/CRH2B.svg"
+      "image": "/assets/svgs/locomotives/CRH2B.svg"
     },
     {
       "id": 16,
@@ -189,7 +189,7 @@
       "weight": 340000,
       "width": 1000,
       "type": "electric",
-      "image": "assets/svgs/locomotives/CRH2C.svg"
+      "image": "/assets/svgs/locomotives/CRH2C.svg"
     },
     {
       "id": 17,
@@ -201,7 +201,7 @@
       "weight": 680000,
       "width": 1000,
       "type": "electric",
-      "image": "assets/svgs/locomotives/CRH2E.svg"
+      "image": "/assets/svgs/locomotives/CRH2E.svg"
     },
     {
       "id": 18,
@@ -213,7 +213,7 @@
       "weight": 340000,
       "width": 1000,
       "type": "electric",
-      "image": "assets/svgs/locomotives/CRH3C.svg"
+      "image": "/assets/svgs/locomotives/CRH3C.svg"
     },
     {
       "id": 19,
@@ -225,7 +225,7 @@
       "weight": 340000,
       "width": 1000,
       "type": "electric",
-      "image": "assets/svgs/locomotives/CRH5A.svg"
+      "image": "/assets/svgs/locomotives/CRH5A.svg"
     },
     {
       "id": 20,
@@ -237,7 +237,7 @@
       "weight": 340000,
       "width": 1000,
       "type": "electric",
-      "image": "assets/svgs/locomotives/CRH380A.svg"
+      "image": "/assets/svgs/locomotives/CRH380A.svg"
     },
     {
       "id": 21,
@@ -249,7 +249,7 @@
       "weight": 340000,
       "width": 1000,
       "type": "electric",
-      "image": "assets/svgs/locomotives/CRH380B.svg"
+      "image": "/assets/svgs/locomotives/CRH380B.svg"
     },
     {
       "id": 22,
@@ -261,7 +261,7 @@
       "weight": 340000,
       "width": 1000,
       "type": "electric",
-      "image": "assets/svgs/locomotives/CRH380C.svg"
+      "image": "/assets/svgs/locomotives/CRH380C.svg"
     },
     {
       "id": 23,
@@ -273,7 +273,7 @@
       "weight": 340000,
       "width": 1000,
       "type": "electric",
-      "image": "assets/svgs/locomotives/CRH380D.svg"
+      "image": "/assets/svgs/locomotives/CRH380D.svg"
     },
     {
       "id": 24,
@@ -285,7 +285,7 @@
       "weight": 350000,
       "width": 1000,
       "type": "electric",
-      "image": "assets/svgs/locomotives/CR300AF.svg"
+      "image": "/assets/svgs/locomotives/CR300AF.svg"
     },
     {
       "id": 25,
@@ -297,7 +297,7 @@
       "weight": 350000,
       "width": 1000,
       "type": "electric",
-      "image": "assets/svgs/locomotives/CR300BF.svg"
+      "image": "/assets/svgs/locomotives/CR300BF.svg"
     },
     {
       "id": 26,
@@ -309,7 +309,7 @@
       "weight": 350000,
       "width": 1000,
       "type": "electric",
-      "image": "assets/svgs/locomotives/CR400AF.svg"
+      "image": "/assets/svgs/locomotives/CR400AF.svg"
     },
     {
       "id": 27,
@@ -321,7 +321,7 @@
       "weight": 350000,
       "width": 1000,
       "type": "electric",
-      "image": "assets/svgs/locomotives/CR400BF.svg"
+      "image": "/assets/svgs/locomotives/CR400BF.svg"
     },
     {
       "id": 28,
@@ -333,7 +333,7 @@
       "weight": 350000,
       "width": 1000,
       "type": "electric",
-      "image": "assets/svgs/locomotives/CR450AF.svg"
+      "image": "/assets/svgs/locomotives/CR450AF.svg"
     },
     {
       "id": 29,
@@ -345,7 +345,7 @@
       "weight": 350000,
       "width": 1000,
       "type": "electric",
-      "image": "assets/svgs/locomotives/CR450BF.svg"
+      "image": "/assets/svgs/locomotives/CR450BF.svg"
     },
     {
       "id": 30,
@@ -357,6 +357,6 @@
       "weight": 350000,
       "width": 1000,
       "type": "electric",
-      "image": "assets/svgs/locomotives/CR450BF.svg"
+      "image": "/assets/svgs/locomotives/CR450BF.svg"
     }
   ]
