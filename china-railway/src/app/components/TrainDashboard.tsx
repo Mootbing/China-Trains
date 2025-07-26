@@ -301,8 +301,7 @@ export default function TrainDashboard({ isOpen, onClose }: TrainDashboardProps)
           ) : (
             <div className="space-y-3">
               {/* Table Header */}
-              <div className="grid grid-cols-12 gap-4 py-2 px-4 bg-white/5 rounded-lg text-sm font-medium text-white/80">
-                <div className="col-span-1 text-center">图片</div>
+              <div className="grid grid-cols-11 gap-4 py-2 px-4 bg-white/5 rounded-lg text-sm font-medium text-white/80">
                 <button
                   onClick={() => handleSort('model')}
                   className="col-span-2 flex items-center gap-2 hover:text-white transition-colors text-left"
@@ -333,16 +332,17 @@ export default function TrainDashboard({ isOpen, onClose }: TrainDashboardProps)
               {filteredVehicles.map((vehicle, index) => (
                 <div
                   key={vehicle.database_id}
-                  className={`grid grid-cols-12 gap-4 py-3 px-4 bg-white/5 hover:bg-white/10 rounded-lg transition-colors border border-white/10 ${
+                  className={`bg-white/5 hover:bg-white/10 rounded-lg transition-colors border border-white/10 overflow-hidden ${
                     index % 2 === 0 ? 'bg-white/5' : 'bg-white/10'
                   }`}
                 >
-                  <div className="col-span-1 flex justify-center">
-                    <div className="w-12 h-8 flex items-center justify-center bg-white/5 rounded overflow-hidden">
+                  {/* Train Image Row */}
+                  <div className="px-4 py-3 border-b border-white/10">
+                    <div className="flex items-center justify-center bg-black rounded-lg p-4 h-30">
                       <img
                         src={vehicle.image.startsWith('/') ? vehicle.image : `/${vehicle.image}`}
                         alt={vehicle.model}
-                        className="w-full h-full object-contain"
+                        className="h-full w-auto object-contain"
                         onError={(e) => {
                           const target = e.target as HTMLImageElement;
                           target.src = vehicle.vehicle_type === 'locomotive' 
@@ -352,39 +352,43 @@ export default function TrainDashboard({ isOpen, onClose }: TrainDashboardProps)
                       />
                     </div>
                   </div>
-                  <div className="col-span-2 text-white font-medium">{vehicle.model}</div>
-                  <div className="col-span-2 text-white/70 font-mono text-sm">{vehicle.serial_number}</div>
-                  <div className="col-span-1">
-                    <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                      vehicle.vehicle_type === 'locomotive' 
-                        ? 'text-blue-400' 
-                        : 'text-green-400'
-                    }`}>
-                      {vehicle.vehicle_type === 'locomotive' ? '机车' : '车厢'}
-                    </span>
-                  </div>
-                  <div className="col-span-2">
-                    <div className="text-white font-medium text-sm">{vehicle.loc_name}</div>
-                    <div className="text-white/60 text-xs">{vehicle.en_name}</div>
-                  </div>
-                  <div className="col-span-2 text-white/70 text-xs">
-                    <div>重量: {(vehicle.weight / 1000).toFixed(1)}t</div>
-                    {vehicle.vehicle_type === 'locomotive' && vehicle.max_speed && (
-                      <>
-                        <div>时速: {vehicle.max_speed}km/h</div>
-                        <div>牵引: {vehicle.max_weight ? (vehicle.max_weight / 1000).toFixed(0) : 'N/A'}t</div>
-                      </>
-                    )}
-                    {vehicle.vehicle_type === 'car' && (
-                      <div>类型: {vehicle.display_type}</div>
-                    )}
-                  </div>
-                  <div className="col-span-2 text-white/70 text-xs">
-                    {vehicle.station_id ? (
-                      <span className="text-blue-400">站点: {vehicle.station_id.substring(0, 8)}...</span>
-                    ) : (
-                      <span className="text-yellow-400">运行中</span>
-                    )}
+                  
+                  {/* Stats Row */}
+                  <div className="grid grid-cols-11 gap-4 py-3 px-4">
+                    <div className="col-span-2 text-white font-medium">{vehicle.model}</div>
+                    <div className="col-span-2 text-white/70 font-mono text-sm">{vehicle.serial_number}</div>
+                    <div className="col-span-1">
+                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                        vehicle.vehicle_type === 'locomotive' 
+                          ? 'text-blue-400' 
+                          : 'text-green-400'
+                      }`}>
+                        {vehicle.vehicle_type === 'locomotive' ? '机车' : '车厢'}
+                      </span>
+                    </div>
+                    <div className="col-span-2">
+                      <div className="text-white font-medium text-sm">{vehicle.loc_name}</div>
+                      <div className="text-white/60 text-xs">{vehicle.en_name}</div>
+                    </div>
+                    <div className="col-span-2 text-white/70 text-xs">
+                      <div>重量: {(vehicle.weight / 1000).toFixed(1)}t</div>
+                      {vehicle.vehicle_type === 'locomotive' && vehicle.max_speed && (
+                        <>
+                          <div>时速: {vehicle.max_speed}km/h</div>
+                          <div>牵引: {vehicle.max_weight ? (vehicle.max_weight / 1000).toFixed(0) : 'N/A'}t</div>
+                        </>
+                      )}
+                      {vehicle.vehicle_type === 'car' && (
+                        <div>类型: {vehicle.display_type}</div>
+                      )}
+                    </div>
+                    <div className="col-span-2 text-white/70 text-xs">
+                      {vehicle.station_id ? (
+                        <span className="text-blue-400">站点: {vehicle.station_id.substring(0, 8)}...</span>
+                      ) : (
+                        <span className="text-yellow-400">运行中</span>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))}

@@ -8,10 +8,9 @@ import { usePlayer } from '../contexts/PlayerContext';
 import { stationUtils, Station } from '../utils/stations';
 import Dock from '../components/Dock';
 import DockButton from '../components/DockButton';
-import TopDock from '../components/TopDock';
-import StationPurchaseModal from '../components/StationPurchaseModal';
 import ArrivalBoard from '../components/ArrivalBoard';
 import StationBoard from '../components/StationBoard';
+import StationPurchaseModal from '../components/StationPurchaseModal';
 import TrainDashboard from '../components/TrainDashboard';
 import StationPage from './Station';
 
@@ -110,6 +109,9 @@ export default function Map() {
   const [stationMarkers, setStationMarkers] = useState<google.maps.Marker[]>([]);
 
   const displayStationsOnMap = (stations: Station[], mapInstance: google.maps.Map) => {
+    // Clear existing station markers first
+    stationMarkers.forEach(marker => marker.setMap(null));
+    
     const markers: google.maps.Marker[] = [];
     
     stations.forEach(station => {
@@ -144,7 +146,7 @@ export default function Map() {
             // Store station data on marker for click handling
             (marker as any).stationData = station;
 
-            // Add click listener to the largest marker (first one)
+            // Add click listener to the largest marker (first one) - this is the clickable one
             if (i === 0) {
               markers.push(marker); // Store clickable markers
             }
@@ -165,6 +167,8 @@ export default function Map() {
 
   // Update station marker click listeners when dispatching state changes
   useEffect(() => {
+    if (stationMarkers.length === 0) return;
+    
     stationMarkers.forEach(marker => {
       // Clear existing listeners
       google.maps.event.clearListeners(marker, 'click');
@@ -172,17 +176,22 @@ export default function Map() {
       // Add new listener with current dispatching state
       marker.addListener('click', () => {
         const station = (marker as any).stationData;
+        console.log('Station clicked:', station?.name, 'isDispatching:', isDispatching);
+        
         if (isDispatching) {
           // Add station to route if not already the last station selected
           setSelectedRoute(prev => {
             const lastStation = prev[prev.length - 1];
             if (!lastStation || lastStation.id !== station.id) {
+              console.log('Adding station to route:', station.name);
               return [...prev, station];
             }
+            console.log('Station already in route, not adding');
             return prev; // Don't add duplicate consecutive stations
           });
         } else {
           // Navigate to station page by ID
+          console.log('Navigating to station:', station.id);
           router.push(`/station/${station.id}`);
         }
       });
@@ -190,6 +199,11 @@ export default function Map() {
   }, [isDispatching, stationMarkers, router]);
 
   const handleLocationClick = async (placeName: string, locName: string, latLng: google.maps.LatLng) => {
+    // Don't handle location clicks when in dispatching mode
+    if (isDispatching) {
+      return;
+    }
+    
     try {
       // Check if station already exists at this location
       const { exists, station, error } = await stationUtils.checkStation(placeName);
@@ -258,7 +272,8 @@ export default function Map() {
 
         // Refresh the station display on the map to include the new station with proper click listeners
         if (map) {
-          displayStationsOnMap([newStation, ...userStations], map);
+          const updatedStations = [newStation, ...userStations];
+          displayStationsOnMap(updatedStations, map);
         }
       }
     } catch (error) {
@@ -290,6 +305,7 @@ export default function Map() {
   };
 
   const handleDispatch = (startingStation: Station, vehicleIdList: number[] = [], metrics?: any) => {
+    console.log('handleDispatch called with:', { startingStation, vehicleIdList, metrics });
     setShowStationPage(false);
     setSelectedStation(null);
     setIsDispatching(true);
@@ -341,7 +357,10 @@ export default function Map() {
   };
 
   const handleSendoffTrain = async () => {
+    console.log('handleSendoffTrain called', { startStation, selectedRoute, vehicleIds });
+    
     if (!startStation || selectedRoute.length === 0 || vehicleIds.length === 0) {
+      console.error('Missing required data:', { startStation: !!startStation, selectedRouteLength: selectedRoute.length, vehicleIdsLength: vehicleIds.length });
       alert('请确保选择了起始站、路线和车辆');
       return;
     }
@@ -349,6 +368,7 @@ export default function Map() {
     try {
       // Create array of all station IDs in order: start station + selected route
       const allStationIds = [startStation.id, ...selectedRoute.map(station => station.id)];
+      console.log('Dispatching with station IDs:', allStationIds);
       
       const response = await fetch('/api/routes/dispatch', {
         method: 'POST',
@@ -379,6 +399,7 @@ export default function Map() {
         await refreshAllRouteData();
       } else {
         const error = await response.json();
+        console.error('Dispatch failed:', error);
         alert(`发车失败: ${error.error}`);
       }
     } catch (error) {
@@ -608,26 +629,9 @@ export default function Map() {
             zIndex: 1000 // Higher z-index to appear above route lines
           });
 
-          // Add click listener to show route info
+          // Add click listener to navigate to route page
           trainMarker.addListener('click', () => {
-            const routeInfo = `
-              Route: ${route.start_station_id} → ${route.end_station_id}
-              Progress: ${route.percent_completion.toFixed(1)}%
-              ETA: ${route.eta}
-              Started: ${new Date(route.started_at).toLocaleString()}
-            `;
-            
-            // Create info window
-            const infoWindow = new google.maps.InfoWindow({
-              content: `<div style="font-family: monospace; font-size: 12px; white-space: pre-line;">${routeInfo}</div>`
-            });
-            
-            infoWindow.open(map, trainMarker);
-            
-            // Close info window after 3 seconds
-            setTimeout(() => {
-              infoWindow.close();
-            }, 3000);
+            router.push(`/routes/${route.id}`);
           });
 
           newTrainMarkers[route.id] = trainMarker;
@@ -1029,49 +1033,50 @@ export default function Map() {
           className="w-full h-full"
           style={{ minHeight: '100vh' }}
         />
-        {/* Top Dock for player stats */}
-        {!isDispatching && <><TopDock />
-        {/* Dock at the bottom */}
-        <Dock>
-          <DockButton svgUrl="/assets/svgs/dock/trains.svg" label="车" onClick={handleShowTrainDashboard} />
-          <DockButton svgUrl="/assets/svgs/dock/stations.svg" label="站" onClick={handleShowStationBoard} />
-          <DockButton svgUrl="/assets/svgs/dock/routes.svg" label="线" onClick={handleShowArrivalBoard} />
-          <DockButton svgUrl="/assets/svgs/dock/logout.svg" label="退" onClick={handleLogout} />
-        </Dock>
 
-        {/* Station Purchase Modal */}
-        <StationPurchaseModal
-          isOpen={isModalOpen}
-          onClose={handleCloseModal}
-          onConfirm={handleConfirmPurchase}
-          stationName={pendingStation?.locName || pendingStation?.placeName || ''}
-          stationCost={10000}
-          currentMoney={player.money}
-          isPurchasing={isPurchasing}
-          purchaseSuccess={purchaseSuccess}
-          onViewStation={handleViewStation}
-        />
-
-        {/* Arrival Board */}
-        <ArrivalBoard
-          isOpen={showArrivalBoard}
-          onClose={handleCloseArrivalBoard}
-          stations={userStations}
-        />
-
-        {/* Station Board */}
-        <StationBoard
-          isOpen={showStationBoard}
-          onClose={handleCloseStationBoard}
-          onSelectStation={handleSelectStation}
-        />
-
-        {/* Train Dashboard */}
-        <TrainDashboard
-          isOpen={showTrainDashboard}
-          onClose={handleCloseTrainDashboard}
-        /></>}
+        {/* Combined Dock with player stats and buttons */}
+        {!isDispatching && (
+          <Dock>
+            <DockButton svgUrl="/assets/svgs/dock/trains.svg" label="车" onClick={handleShowTrainDashboard} />
+            <DockButton svgUrl="/assets/svgs/dock/stations.svg" label="站" onClick={handleShowStationBoard} />
+            <DockButton svgUrl="/assets/svgs/dock/routes.svg" label="线" onClick={handleShowArrivalBoard} />
+            <DockButton svgUrl="/assets/svgs/dock/logout.svg" label="退" onClick={handleLogout} />
+          </Dock>
+        )}
       </div>
+
+      {/* Station Purchase Modal */}
+      <StationPurchaseModal
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        onConfirm={handleConfirmPurchase}
+        stationName={pendingStation?.locName || pendingStation?.placeName || ''}
+        stationCost={10000}
+        currentMoney={player.money}
+        isPurchasing={isPurchasing}
+        purchaseSuccess={purchaseSuccess}
+        onViewStation={handleViewStation}
+      />
+
+      {/* Arrival Board */}
+      <ArrivalBoard
+        isOpen={showArrivalBoard}
+        onClose={handleCloseArrivalBoard}
+        stations={userStations}
+      />
+
+      {/* Station Board */}
+      <StationBoard
+        isOpen={showStationBoard}
+        onClose={handleCloseStationBoard}
+        onSelectStation={handleSelectStation}
+      />
+
+      {/* Train Dashboard */}
+      <TrainDashboard
+        isOpen={showTrainDashboard}
+        onClose={handleCloseTrainDashboard}
+      />
 
       {/* Dispatching Overlay */}
       {isDispatching && (

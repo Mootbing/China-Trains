@@ -357,17 +357,12 @@ export default function StationPage({ station, onBack, onDispatch }: {
         </button>
       )}
 
-      {/* Dispatch Button */}
-      {hasLocomotive && onDispatch && (
+      {/* Top Right Button Container */}
+      <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
+        {/* Arrival Board Button */}
         <button
-          onClick={() => {
-            const vehicleIds = trainConsist.map(vehicle => (vehicle as any).database_id || vehicle.id);
-            console.log('Dispatching train with vehicle IDs:', vehicleIds);
-            console.log('Train consist:', trainConsist);
-            console.log('Train metrics being passed:', trainMetrics);
-            onDispatch(station, vehicleIds, trainMetrics);
-          }}
-          className="absolute top-4 right-4 z-20 bg-white text-black px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
+          onClick={() => setShowArrivalBoard(true)}
+          className="bg-blue-500/80 hover:bg-blue-500 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors whitespace-nowrap"
         >
           <svg 
             className="w-5 h-5" 
@@ -379,35 +374,41 @@ export default function StationPage({ station, onBack, onDispatch }: {
               strokeLinecap="round" 
               strokeLinejoin="round" 
               strokeWidth={2} 
-              d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" 
+              d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" 
             />
           </svg>
-          发车
+          线路
         </button>
-      )}
 
-      {/* Arrival Board Button */}
-      <button
-        onClick={() => setShowArrivalBoard(true)}
-        className={`absolute top-4 z-20 bg-blue-500/80 hover:bg-blue-500 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors ${
-          hasLocomotive && onDispatch ? 'right-32' : 'right-4'
-        }`}
-      >
-        <svg 
-          className="w-5 h-5" 
-          fill="none" 
-          stroke="currentColor" 
-          viewBox="0 0 24 24"
-        >
-          <path 
-            strokeLinecap="round" 
-            strokeLinejoin="round" 
-            strokeWidth={2} 
-            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" 
-          />
-        </svg>
-        线路
-      </button>
+        {/* Dispatch Button */}
+        {hasLocomotive && onDispatch && (
+          <button
+            onClick={() => {
+              const vehicleIds = trainConsist.map(vehicle => (vehicle as any).database_id || vehicle.id);
+              console.log('Dispatching train with vehicle IDs:', vehicleIds);
+              console.log('Train consist:', trainConsist);
+              console.log('Train metrics being passed:', trainMetrics);
+              onDispatch(station, vehicleIds, trainMetrics);
+            }}
+            className="bg-white text-black px-4 py-2 rounded-lg flex items-center gap-2 transition-colors whitespace-nowrap"
+          >
+            <svg 
+              className="w-5 h-5" 
+              fill="none" 
+              stroke="currentColor" 
+              viewBox="0 0 24 24"
+            >
+              <path 
+                strokeLinecap="round" 
+                strokeLinejoin="round" 
+                strokeWidth={2} 
+                d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" 
+              />
+            </svg>
+            发车
+          </button>
+        )}
+      </div>
 
       {/* Station Title */}
       <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-20 bg-black/50 text-white px-6 py-2 rounded-lg">
