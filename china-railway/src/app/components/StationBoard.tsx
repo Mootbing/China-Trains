@@ -135,10 +135,10 @@ export default function StationBoard({ isOpen, onClose, onSelectStation }: Stati
           <div className="flex items-center justify-between gap-4">
             <div className="flex-shrink-0">
               <h2 className="text-xl font-bold text-white">
-                车站列表
+                车站
               </h2>
               <p className="text-sm text-white/60 mt-1">
-                显示所有拥有的车站 • 点击车站前往
+                共 {stations.length} 站
               </p>
             </div>
             

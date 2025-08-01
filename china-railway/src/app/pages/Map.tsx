@@ -385,7 +385,6 @@ export default function Map() {
 
       if (response.ok) {
         const result = await response.json();
-        alert(`列车已成功发车！路线ID: ${result.routeId}`);
         
         // Reset dispatching state
         setIsDispatching(false);
@@ -397,6 +396,9 @@ export default function Map() {
         
         // Use comprehensive refresh to show the new route and train marker
         await refreshAllRouteData();
+        
+        // Navigate to the route page
+        router.push(`/routes/${result.routeId}`);
       } else {
         const error = await response.json();
         console.error('Dispatch failed:', error);
@@ -1037,9 +1039,9 @@ export default function Map() {
         {/* Combined Dock with player stats and buttons */}
         {!isDispatching && (
           <Dock>
-            <DockButton svgUrl="/assets/svgs/dock/trains.svg" label="车" onClick={handleShowTrainDashboard} />
-            <DockButton svgUrl="/assets/svgs/dock/stations.svg" label="站" onClick={handleShowStationBoard} />
             <DockButton svgUrl="/assets/svgs/dock/routes.svg" label="线" onClick={handleShowArrivalBoard} />
+            <DockButton svgUrl="/assets/svgs/dock/stations.svg" label="站" onClick={handleShowStationBoard} />
+            <DockButton svgUrl="/assets/svgs/dock/trains.svg" label="库" onClick={handleShowTrainDashboard} />
             <DockButton svgUrl="/assets/svgs/dock/logout.svg" label="退" onClick={handleLogout} />
           </Dock>
         )}

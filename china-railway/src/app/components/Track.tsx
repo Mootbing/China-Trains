@@ -5,6 +5,7 @@ interface TrackProps {
   train?: React.ReactNode;
   trainPosition?: 'top' | 'bottom';
   electrified?: boolean;
+  leftOffset?: number; // Offset for train position
   level?: number;
   speed?: number; // Train speed in km/h for animation
   isMoving?: boolean; // Whether the train is currently moving
@@ -16,7 +17,8 @@ const Track: React.FC<TrackProps> = ({
   electrified = true,
   level = 0,
   speed = 0,
-  isMoving = false
+  isMoving = false,
+  leftOffset = isMoving ? 100 : 300,
 }) => {
 
   function recalculateNumRails() {
@@ -149,10 +151,11 @@ const Track: React.FC<TrackProps> = ({
             className="w-full relative z-10 overflow-x-auto overflow-y-hidden"
             style={{
               scrollbarWidth: "none",
-              WebkitOverflowScrolling: "touch"
+              WebkitOverflowScrolling: "touch",
+              paddingLeft: leftOffset
             }}
           >
-            <div className="flex justify-start items-end min-w-full px-4">
+            <div className="flex justify-start items-center min-w-full">
               {train}
             </div>
           </div>

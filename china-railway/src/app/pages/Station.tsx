@@ -55,12 +55,6 @@ export default function StationPage({ station, onBack, onDispatch }: {
   const [trainConsist, setTrainConsist] = useState<(LocomotiveType | Car)[]>([]);
   const [isLoadingVehicles, setIsLoadingVehicles] = useState(true);
   const scrollableContainerRef = useRef<HTMLDivElement>(null);
-  const trackRef = useRef<HTMLDivElement>(null);
-  const [isDragging, setIsDragging] = useState(false);
-  const [startX, setStartX] = useState(0);
-  const [scrollLeft, setScrollLeft] = useState(0);
-  const [draggedVehicle, setDraggedVehicle] = useState<VehicleData | null>(null);
-  const [isDragOver, setIsDragOver] = useState(false);
 
   // Calculate train performance metrics
   const calculateTrainMetrics = () => {
@@ -204,95 +198,47 @@ export default function StationPage({ station, onBack, onDispatch }: {
     }
   }, [station]);
 
-  const onMouseDown = (e: React.MouseEvent) => {
-    if (!scrollableContainerRef.current) return;
-    setIsDragging(true);
-    setStartX(e.pageX - scrollableContainerRef.current.offsetLeft);
-    setScrollLeft(scrollableContainerRef.current.scrollLeft);
-    scrollableContainerRef.current.style.cursor = 'grabbing';
-  };
-
-  const onMouseLeave = () => {
-    if (!scrollableContainerRef.current) return;
-    setIsDragging(false);
-    scrollableContainerRef.current.style.cursor = 'grab';
-  };
-
-  const onMouseUp = () => {
-    if (!scrollableContainerRef.current) return;
-    setIsDragging(false);
-    scrollableContainerRef.current.style.cursor = 'grab';
-  };
-
-  const onMouseMove = (e: React.MouseEvent) => {
-    if (!isDragging || !scrollableContainerRef.current) return;
-    e.preventDefault();
-    const x = e.pageX - scrollableContainerRef.current.offsetLeft;
-    const walk = (x - startX) * 2; //scroll-fast
-    scrollableContainerRef.current.scrollLeft = scrollLeft - walk;
-  };
-
-  const handleDragStart = (e: React.DragEvent, vehicle: VehicleData) => {
-    setDraggedVehicle(vehicle);
-    e.dataTransfer.effectAllowed = 'copy';
-  };
-
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'copy';
-    setIsDragOver(true);
-  };
-
-  const handleDragLeave = (e: React.DragEvent) => {
-    if (!trackRef.current?.contains(e.relatedTarget as Node)) {
-      setIsDragOver(false);
-    }
-  };
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragOver(false);
-    
-    if (draggedVehicle && availableCounts[draggedVehicle.model] > 0) {
+  const handleVehicleClick = (vehicle: VehicleData) => {
+    if (availableCounts[vehicle.model] > 0) {
       // Get a specific database ID for this vehicle instance
-      const availableIds = availableDatabaseIds[draggedVehicle.model];
+      const availableIds = availableDatabaseIds[vehicle.model];
       if (availableIds.length === 0) {
-        console.error('No available database IDs for model:', draggedVehicle.model);
+        console.error('No available database IDs for model:', vehicle.model);
         return;
       }
       
       const selectedDatabaseId = availableIds[0]; // Take the first available ID
-      console.log(`Dropping ${draggedVehicle.model}, selected database ID:`, selectedDatabaseId);
-      console.log('Available IDs for model:', draggedVehicle.model, availableIds);
+      console.log(`Adding ${vehicle.model}, selected database ID:`, selectedDatabaseId);
+      console.log('Available IDs for model:', vehicle.model, availableIds);
       
       // Convert VehicleData to LocomotiveType or Car
       let newVehicle: LocomotiveType | Car;
       
-      if (draggedVehicle.is_locomotive) {
+      if (vehicle.is_locomotive) {
         newVehicle = {
-          id: draggedVehicle.id,
-          en_name: draggedVehicle.en_name,
-          loc_name: draggedVehicle.loc_name,
-          model: draggedVehicle.model,
-          max_speed: (locomotives as any[]).find(l => l.id === draggedVehicle.id)?.max_speed || 100,
-          max_weight: (locomotives as any[]).find(l => l.id === draggedVehicle.id)?.max_weight || 1000000,
-          weight: draggedVehicle.weight,
-          width: draggedVehicle.width,
-          type: draggedVehicle.type as 'electric' | 'diesel' | 'steam',
-          image: draggedVehicle.image.startsWith('/') ? draggedVehicle.image : `/${draggedVehicle.image}`,
+          id: vehicle.id,
+          en_name: vehicle.en_name,
+          loc_name: vehicle.loc_name,
+          model: vehicle.model,
+          max_speed: (locomotives as any[]).find(l => l.id === vehicle.id)?.max_speed || 100,
+          max_weight: (locomotives as any[]).find(l => l.id === vehicle.id)?.max_weight || 1000000,
+          weight: vehicle.weight,
+          width: vehicle.width,
+          type: vehicle.type as 'electric' | 'diesel' | 'steam',
+          image: vehicle.image.startsWith('/') ? vehicle.image : `/${vehicle.image}`,
           database_id: selectedDatabaseId,
         } as LocomotiveType & { database_id: string };
       } else {
         newVehicle = {
-          id: draggedVehicle.id,
-          en_name: draggedVehicle.en_name,
-          loc_name: draggedVehicle.loc_name,
-          model: draggedVehicle.model,
-          type: draggedVehicle.type as 'passenger' | 'freight',
-          weight: draggedVehicle.weight,
-          width: draggedVehicle.width,
-          type_info: (cars as any[]).find(c => c.id === draggedVehicle.id)?.type_info || {},
-          image: draggedVehicle.image.startsWith('/') ? draggedVehicle.image : `/${draggedVehicle.image}`,
+          id: vehicle.id,
+          en_name: vehicle.en_name,
+          loc_name: vehicle.loc_name,
+          model: vehicle.model,
+          type: vehicle.type as 'passenger' | 'freight',
+          weight: vehicle.weight,
+          width: vehicle.width,
+          type_info: (cars as any[]).find(c => c.id === vehicle.id)?.type_info || {},
+          image: vehicle.image.startsWith('/') ? vehicle.image : `/${vehicle.image}`,
           database_id: selectedDatabaseId,
         } as Car & { database_id: string };
       }
@@ -302,15 +248,13 @@ export default function StationPage({ station, onBack, onDispatch }: {
       // Decrease available count and remove the used database ID
       setAvailableCounts(prev => ({
         ...prev,
-        [draggedVehicle.model]: prev[draggedVehicle.model] - 1
+        [vehicle.model]: prev[vehicle.model] - 1
       }));
       
       setAvailableDatabaseIds(prev => ({
         ...prev,
-        [draggedVehicle.model]: prev[draggedVehicle.model].filter(id => id !== selectedDatabaseId)
+        [vehicle.model]: prev[vehicle.model].filter(id => id !== selectedDatabaseId)
       }));
-      
-      setDraggedVehicle(null);
     }
   };
 
@@ -332,7 +276,7 @@ export default function StationPage({ station, onBack, onDispatch }: {
   };
 
   return (
-    <div className='relative overflow-hidden h-screen'>
+    <div className='relative overflow-hidden h-screen bg-black'>
       
       {/* Back to Map Button */}
       {onBack && (
@@ -411,7 +355,7 @@ export default function StationPage({ station, onBack, onDispatch }: {
       </div>
 
       {/* Station Title */}
-      <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-20 bg-black/50 text-white px-6 py-2 rounded-lg">
+      <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-20 text-white px-6 py-2 rounded-lg">
         <h1 className="text-xl font-bold text-center">
           {station.loc_name || station.name}站
         </h1>
@@ -443,13 +387,7 @@ export default function StationPage({ station, onBack, onDispatch }: {
         )}
       </div>
 
-      <div
-        ref={trackRef}
-        className={`absolute bottom-0 w-full transition-all duration-200 ${isDragOver ? 'bg-blue-500/20' : ''}`}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
-      >
+      <div className="absolute bottom-0 w-full">
         <Track 
           // electrified={false}
           className="bottom-50"
@@ -468,11 +406,7 @@ export default function StationPage({ station, onBack, onDispatch }: {
 
       <div
         ref={scrollableContainerRef}
-        className={`absolute bottom-0 w-full overflow-x-auto whitespace-nowrap py-4 ${isLoadingVehicles ? 'cursor-default' : 'cursor-grab'}`}
-        onMouseDown={isLoadingVehicles ? undefined : onMouseDown}
-        onMouseLeave={isLoadingVehicles ? undefined : onMouseLeave}
-        onMouseUp={isLoadingVehicles ? undefined : onMouseUp}
-        onMouseMove={isLoadingVehicles ? undefined : onMouseMove}
+        className="absolute bottom-0 w-full overflow-x-auto whitespace-nowrap py-4"
       >
         {isLoadingVehicles ? (
           // Loading spinner
@@ -501,9 +435,8 @@ export default function StationPage({ station, onBack, onDispatch }: {
               .map(({ vehicle }, index) => (
               <div 
                 key={index} 
-                className="relative inline-block bg-white/5 p-2 rounded-lg shadow cursor-move"
-                draggable
-                onDragStart={(e) => handleDragStart(e, vehicle)}
+                className="relative inline-block bg-white/5 p-2 rounded-lg shadow cursor-pointer hover:bg-white/10 transition-colors"
+                onClick={() => handleVehicleClick(vehicle)}
               >
                 {availableCounts[vehicle.model] > 1 && (
                   <div className="absolute top-0 right-0 -mt-2 -mr-2 bg-white/10 text-white rounded-full h-6 w-6 flex items-center justify-center text-xs font-bold z-10">

@@ -85,9 +85,11 @@ export default function Login() {
         )}
       </div>
       
-      {/* Track with Train */}
+      {/* Track with Train (moving effect) */}
       <Track 
         className="bottom-100"
+        isMoving={true}
+        speed={120}
         train={
           (locoLoading || carLoading) ? (
             <div className="text-white">火车模型正在加载中...</div>

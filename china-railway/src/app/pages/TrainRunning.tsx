@@ -31,7 +31,7 @@ const TrainRunning: React.FC<TrainRunningProps> = ({ route, onBack }) => {
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="flex flex-col items-center">
             <div className="w-8 h-8 border-2 border-white/30 border-t-white rounded-full animate-spin mb-3"></div>
-            <p className="text-white text-lg">加载中...</p>
+            <p className="text-white text-lg text-bold">加载中...</p>
           </div>
         </div>
       </div>
@@ -97,9 +97,9 @@ const TrainRunning: React.FC<TrainRunningProps> = ({ route, onBack }) => {
 
   return (
     <div 
-      className='relative overflow-hidden h-screen'
+      className='relative overflow-hidden h-screen w-screen bg-black'
       style={{
-        transform: `translate(${vibrationOffset.x}px, ${vibrationOffset.y}px)`,
+        // transform: `translate(${vibrationOffset.x}px, ${vibrationOffset.y}px)`,
         transition: 'none'
       }}
     >
@@ -150,7 +150,7 @@ const TrainRunning: React.FC<TrainRunningProps> = ({ route, onBack }) => {
       </div>
 
       {/* Status Header */}
-      <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-20 bg-black/50 text-white px-6 py-2 rounded-lg">
+      <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-20 text-white px-6 py-2 rounded-lg">
         <h1 className="text-xl font-bold text-center">
           运行中 - {route.trainNumber || '列车'}
         </h1>

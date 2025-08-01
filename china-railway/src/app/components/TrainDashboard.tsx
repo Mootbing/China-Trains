@@ -213,10 +213,10 @@ export default function TrainDashboard({ isOpen, onClose }: TrainDashboardProps)
           <div className="flex items-center justify-between gap-4">
             <div className="flex-shrink-0">
               <h2 className="text-xl font-bold text-white">
-                车辆仪表板
+                车库
               </h2>
               <p className="text-sm text-white/60 mt-1">
-                显示所有拥有的车辆 • 共 {filteredVehicles.length} 辆
+                共 {filteredVehicles.length} 辆
               </p>
             </div>
             
@@ -256,7 +256,7 @@ export default function TrainDashboard({ isOpen, onClose }: TrainDashboardProps)
                 onChange={(e) => setTypeFilter(e.target.value as 'all' | 'locomotive' | 'car')}
                 className="w-full px-3 py-1.5 text-sm bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-white/40 focus:bg-white/15 transition-all"
               >
-                <option value="all">所有类型</option>
+                <option value="all">机车+车厢</option>
                 <option value="locomotive">机车</option>
                 <option value="car">车厢</option>
               </select>

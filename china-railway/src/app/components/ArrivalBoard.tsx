@@ -275,12 +275,12 @@ export default function ArrivalBoard({ isOpen, onClose, stationId, stations }: A
               <h2 className="text-xl font-bold text-white">
                 {selectedStation 
                   ? `${selectedStation.loc_name || selectedStation.name} 到达信息` 
-                  : '线路运行状态'}
+                  : '线路'}
               </h2>
               <p className="text-sm text-white/60 mt-1">
                 {selectedStation 
-                  ? '显示即将到达此站的列车信息'
-                  : '显示所有运行中的列车线路'}
+                  ? `共 ${arrivals.length} 辆车`
+                  : `共 ${arrivals.length} 辆车`}
               </p>
             </div>
             
