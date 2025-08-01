@@ -349,14 +349,14 @@
     },
     {
       "id": 30,
-      "en_name": "cheat code",
-      "loc_name": "cheating",
+      "en_name": "Feiji",
+      "loc_name": "飞机",
       "model": "cheat",
-      "max_speed": 1234,
-      "max_weight": 420000,
-      "weight": 350000,
-      "width": 1000,
+      "max_speed": 5000,
+      "max_weight": 4200000,
+      "weight": 0,
+      "width": 1500,
       "type": "electric",
-      "image": "/assets/svgs/locomotives/CR450BF.svg"
+      "image": "/assets/svgs/locomotives/Feiji.svg"
     }
   ]

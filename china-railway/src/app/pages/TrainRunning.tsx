@@ -27,7 +27,7 @@ const TrainRunning: React.FC<TrainRunningProps> = ({ route, onBack }) => {
 
   if (!route) {
     return (
-      <div className='relative overflow-hidden h-screen'>
+      <div className='relative overflow-hidden h-screen bg-black'>
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="flex flex-col items-center">
             <div className="w-8 h-8 border-2 border-white/30 border-t-white rounded-full animate-spin mb-3"></div>
@@ -152,7 +152,7 @@ const TrainRunning: React.FC<TrainRunningProps> = ({ route, onBack }) => {
       {/* Status Header */}
       <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-20 text-white px-6 py-2 rounded-lg">
         <h1 className="text-xl font-bold text-center">
-          运行中 - {route.trainNumber || '列车'}
+          运行中 - {route.id || '无'} 号
         </h1>
         {route.nextStation && (
           <div className="text-center mt-1">
