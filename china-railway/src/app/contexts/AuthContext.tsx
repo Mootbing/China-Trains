@@ -8,7 +8,8 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
-  signInWithGoogle: () => Promise<void>;
+  signInWithEmail: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  signUpWithEmail: (email: string, password: string) => Promise<{ success: boolean; error?: string; message?: string }>;
   signOut: () => Promise<void>;
 }
 
@@ -41,21 +42,48 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const signInWithGoogle = async () => {
+  const signInWithEmail = async (email: string, password: string) => {
     try {
-      const { url, error } = await authUtils.signInWithGoogle();
+      const { success, user: signedInUser, session: userSession, error } = await authUtils.signInWithEmail(email, password);
 
       if (error) {
-        throw new Error(error);
+        return { success: false, error };
       }
 
-      if (url) {
-        // Redirect to Google OAuth
-        window.location.href = url;
+      if (success && signedInUser && userSession) {
+        setUser(signedInUser);
+        setSession(userSession);
+        return { success: true };
       }
+
+      return { success: false, error: 'Sign in failed' };
     } catch (error) {
-      console.error('Error signing in with Google:', error);
-      throw error;
+      console.error('Error signing in with email:', error);
+      return { success: false, error: 'Sign in failed' };
+    }
+  };
+
+  const signUpWithEmail = async (email: string, password: string) => {
+    try {
+      const { success, user: signedUpUser, session: userSession, message, error } = await authUtils.signUpWithEmail(email, password);
+
+      if (error) {
+        return { success: false, error };
+      }
+
+      if (success) {
+        // If user is immediately confirmed (no email verification required)
+        if (signedUpUser && userSession) {
+          setUser(signedUpUser);
+          setSession(userSession);
+        }
+        return { success: true, message };
+      }
+
+      return { success: false, error: 'Sign up failed' };
+    } catch (error) {
+      console.error('Error signing up with email:', error);
+      return { success: false, error: 'Sign up failed' };
     }
   };
 
@@ -81,7 +109,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     user,
     session,
     loading,
-    signInWithGoogle,
+    signInWithEmail,
+    signUpWithEmail,
     signOut,
   };
 

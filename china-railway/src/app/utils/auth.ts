@@ -6,6 +6,21 @@ export interface AuthResponse {
   error?: string;
 }
 
+export interface SignInResponse {
+  success: boolean;
+  user?: User;
+  session?: Session;
+  error?: string;
+}
+
+export interface SignUpResponse {
+  success: boolean;
+  user?: User;
+  session?: Session;
+  message?: string;
+  error?: string;
+}
+
 export const authUtils = {
   async getSession(): Promise<AuthResponse> {
     try {
@@ -34,25 +49,70 @@ export const authUtils = {
     }
   },
 
-  async signInWithGoogle(): Promise<{ url?: string; error?: string }> {
+  async signInWithEmail(email: string, password: string): Promise<SignInResponse> {
     try {
       const response = await fetch('/api/auth/signin', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
+        body: JSON.stringify({ email, password }),
       });
 
       const data = await response.json();
 
-      if (response.ok && data.url) {
-        return { url: data.url };
+      if (response.ok) {
+        return { 
+          success: true,
+          user: data.user,
+          session: data.session
+        };
       } else {
-        return { error: data.error || 'Sign in failed' };
+        return { 
+          success: false,
+          error: data.error || 'Sign in failed' 
+        };
       }
     } catch (error) {
-      console.error('Error signing in with Google:', error);
-      return { error: 'Sign in failed' };
+      console.error('Error signing in with email:', error);
+      return { 
+        success: false,
+        error: 'Sign in failed' 
+      };
+    }
+  },
+
+  async signUpWithEmail(email: string, password: string): Promise<SignUpResponse> {
+    try {
+      const response = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        return { 
+          success: true,
+          user: data.user,
+          session: data.session,
+          message: data.message
+        };
+      } else {
+        return { 
+          success: false,
+          error: data.error || 'Sign up failed' 
+        };
+      }
+    } catch (error) {
+      console.error('Error signing up with email:', error);
+      return { 
+        success: false,
+        error: 'Sign up failed' 
+      };
     }
   },
 

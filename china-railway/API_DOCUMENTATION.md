@@ -5,26 +5,77 @@ This document describes the API routes that have been moved to the backend for b
 ## Authentication API Routes
 
 ### POST `/api/auth/signin`
-Initiates Google OAuth sign-in process.
+Authenticates user with email and password.
 
 **Request:**
 ```json
 POST /api/auth/signin
 Content-Type: application/json
+
+{
+  "email": "user@example.com",
+  "password": "userpassword"
+}
 ```
 
 **Response:**
 ```json
 {
   "success": true,
-  "url": "https://supabase.co/auth/v1/authorize?..."
+  "user": {
+    "id": "user-uuid",
+    "email": "user@example.com",
+    "created_at": "2023-01-01T00:00:00.000Z"
+  },
+  "session": {
+    "access_token": "jwt-token",
+    "refresh_token": "refresh-token"
+  }
 }
 ```
 
 **Error Response:**
 ```json
 {
-  "error": "Error message"
+  "error": "Invalid login credentials"
+}
+```
+
+### POST `/api/auth/signup`
+Creates a new user account with email and password.
+
+**Request:**
+```json
+POST /api/auth/signup
+Content-Type: application/json
+
+{
+  "email": "user@example.com",
+  "password": "userpassword"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "user": {
+    "id": "user-uuid",
+    "email": "user@example.com",
+    "created_at": "2023-01-01T00:00:00.000Z"
+  },
+  "session": {
+    "access_token": "jwt-token",
+    "refresh_token": "refresh-token"
+  },
+  "message": "Account created successfully!"
+}
+```
+
+**Error Response:**
+```json
+{
+  "error": "User already registered"
 }
 ```
 

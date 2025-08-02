@@ -32,6 +32,7 @@ export async function middleware(request: NextRequest) {
   if (request.nextUrl.pathname.startsWith('/api/player/') || 
       (request.nextUrl.pathname.startsWith('/api/auth/') && 
        !request.nextUrl.pathname.startsWith('/api/auth/signin') &&
+       !request.nextUrl.pathname.startsWith('/api/auth/signup') &&
        !request.nextUrl.pathname.startsWith('/api/auth/session'))) {
     
     if (!session) {

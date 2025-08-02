@@ -38,9 +38,14 @@ export async function POST(request: NextRequest) {
       }
     );
     
-    const { data, error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
+      options: {
+        data: {
+          name: email.split('@')[0], // Use part before @ as default name
+        },
+      },
     });
 
     if (error) {
@@ -50,13 +55,16 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ 
       success: true,
       user: data.user,
-      session: data.session
+      session: data.session,
+      message: data.user?.email_confirmed_at 
+        ? 'Account created successfully!' 
+        : 'Please check your email to confirm your account.'
     });
   } catch (error) {
-    console.error('Sign in error:', error);
+    console.error('Sign up error:', error);
     return NextResponse.json(
       { error: 'Internal server error' }, 
       { status: 500 }
     );
   }
-} 
+}
