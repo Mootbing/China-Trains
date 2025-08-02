@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
     // Get vehicles data
     let query = supabase
       .from('vehicles')
-      .select('id, model, type, station_id')
+      .select('id, model, type, station_id, route_id')
       .eq('user_id', user.id);
 
     // If station_id is provided, filter by it; otherwise, fetch all vehicles

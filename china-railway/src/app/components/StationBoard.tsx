@@ -7,16 +7,18 @@ interface StationBoardProps {
   isOpen: boolean;
   onClose: () => void;
   onSelectStation: (stationId: string) => void;
+  onZoomToCoordinates?: (latitude: number, longitude: number) => void;
 }
 
-export default function StationBoard({ isOpen, onClose, onSelectStation }: StationBoardProps) {
+export default function StationBoard({ isOpen, onClose, onSelectStation, onZoomToCoordinates }: StationBoardProps) {
   const [stations, setStations] = useState<Station[]>([]);
+  const [stationVehicleCounts, setStationVehicleCounts] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(false);
-  const [sortField, setSortField] = useState<'name' | 'level' | 'location'>('level');
+  const [sortField, setSortField] = useState<'name' | 'level' | 'location' | 'vehicles'>('level');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Load all stations
+  // Load all stations and vehicle counts
   const loadStations = async () => {
     setLoading(true);
     try {
@@ -28,12 +30,38 @@ export default function StationBoard({ isOpen, onClose, onSelectStation }: Stati
         const stationsData = data.stations || data;
         if (Array.isArray(stationsData)) {
           setStations(stationsData);
+          
+          // Load vehicle counts for each station
+          await loadVehicleCounts(stationsData);
         }
       }
     } catch (error) {
       console.error('Error loading stations:', error);
     }
     setLoading(false);
+  };
+
+  // Load vehicle counts for all stations
+  const loadVehicleCounts = async (stationsData: Station[]) => {
+    try {
+      const vehicleCounts: Record<string, number> = {};
+      
+      // Get all vehicles without station filter to count them per station
+      const response = await fetch('/api/player/vehicles');
+      if (response.ok) {
+        const vehicles = await response.json();
+        
+        // Count vehicles per station
+        stationsData.forEach(station => {
+          const stationVehicles = vehicles.filter((vehicle: any) => vehicle.station_id === station.id);
+          vehicleCounts[station.id] = stationVehicles.length;
+        });
+        
+        setStationVehicleCounts(vehicleCounts);
+      }
+    } catch (error) {
+      console.error('Error loading vehicle counts:', error);
+    }
   };
 
   // Load stations when component opens
@@ -86,12 +114,15 @@ export default function StationBoard({ isOpen, onClose, onSelectStation }: Stati
           comparison = a.latitude - b.latitude;
         }
         break;
+      case 'vehicles':
+        comparison = (stationVehicleCounts[a.id] || 0) - (stationVehicleCounts[b.id] || 0);
+        break;
     }
     
     return sortDirection === 'asc' ? comparison : -comparison;
   });
 
-  const handleSort = (field: 'name' | 'level' | 'location') => {
+  const handleSort = (field: 'name' | 'level' | 'location' | 'vehicles') => {
     if (sortField === field) {
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
     } else {
@@ -100,7 +131,7 @@ export default function StationBoard({ isOpen, onClose, onSelectStation }: Stati
     }
   };
 
-  const getSortIcon = (field: 'name' | 'level' | 'location') => {
+  const getSortIcon = (field: 'name' | 'level' | 'location' | 'vehicles') => {
     if (sortField !== field) {
       return (
         <svg className="w-4 h-4 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -125,6 +156,14 @@ export default function StationBoard({ isOpen, onClose, onSelectStation }: Stati
   const handleStationClick = (station: Station) => {
     onSelectStation(station.id);
     onClose();
+  };
+
+  const handleCoordinateClick = (latitude: number, longitude: number, event: React.MouseEvent) => {
+    event.stopPropagation(); // Prevent station selection
+    if (onZoomToCoordinates) {
+      onZoomToCoordinates(latitude, longitude);
+      onClose();
+    }
   };
 
   return (
@@ -210,7 +249,7 @@ export default function StationBoard({ isOpen, onClose, onSelectStation }: Stati
           ) : (
             <div className="space-y-3">
               {/* Table Header */}
-              <div className="grid grid-cols-9 gap-4 py-2 px-4 bg-white/5 rounded-lg text-sm font-medium text-white/80">
+              <div className="grid grid-cols-12 gap-4 py-2 px-4 bg-white/5 rounded-lg text-sm font-medium text-white/80">
                 <button
                   onClick={() => handleSort('name')}
                   className="col-span-4 flex items-center gap-2 hover:text-white transition-colors text-left"
@@ -226,8 +265,15 @@ export default function StationBoard({ isOpen, onClose, onSelectStation }: Stati
                   {getSortIcon('level')}
                 </button>
                 <button
+                  onClick={() => handleSort('vehicles')}
+                  className="col-span-2 flex items-center gap-2 hover:text-white transition-colors text-left"
+                >
+                  车辆数
+                  {getSortIcon('vehicles')}
+                </button>
+                <button
                   onClick={() => handleSort('location')}
-                  className="col-span-3 flex items-center gap-2 hover:text-white transition-colors text-left"
+                  className="col-span-4 flex items-center gap-2 hover:text-white transition-colors text-left"
                 >
                   位置
                   {getSortIcon('location')}
@@ -238,7 +284,7 @@ export default function StationBoard({ isOpen, onClose, onSelectStation }: Stati
               {sortedStations.map((station) => (
                 <div
                   key={station.id}
-                  className="grid grid-cols-9 gap-4 py-3 px-4 bg-white/5 hover:bg-white/10 rounded-lg transition-colors border border-white/10 cursor-pointer"
+                  className="grid grid-cols-12 gap-4 py-3 px-4 bg-white/5 hover:bg-white/10 rounded-lg transition-colors border border-white/10 cursor-pointer"
                   onClick={() => handleStationClick(station)}
                 >
                   <div className="col-span-4">
@@ -258,8 +304,26 @@ export default function StationBoard({ isOpen, onClose, onSelectStation }: Stati
                     </span>
                   </div>
                   
-                  <div className="col-span-3">
-                    <div className="text-white/70 text-sm font-mono">
+                  <div className="col-span-2">
+                    <div className="flex items-center gap-2">
+                      <div className="text-/60 font-medium">
+                        {stationVehicleCounts[station.id] || 0}
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <svg className="w-4 h-4 text-white/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 6h3l3 3v6H5V9l3-3h3V6z" />
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="col-span-4">
+                    <div 
+                      className="text-white/70 text-sm font-mono hover:text-blue-400 hover:underline cursor-pointer transition-colors"
+                      onClick={(e) => station.latitude && station.longitude && handleCoordinateClick(station.latitude, station.longitude, e)}
+                      title="点击缩放到此位置"
+                    >
                       {station.latitude?.toFixed(3)}, {station.longitude?.toFixed(3)}
                     </div>
                   </div>
@@ -296,6 +360,11 @@ export default function StationBoard({ isOpen, onClose, onSelectStation }: Stati
             </div>
             <div>
               总计: {stations.length} 个车站
+              {Object.keys(stationVehicleCounts).length > 0 && (
+                <span className="ml-4">
+                  车辆: {Object.values(stationVehicleCounts).reduce((sum, count) => sum + count, 0)} 辆
+                </span>
+              )}
               {searchTerm && (
                 <span className="ml-4">
                   显示: {sortedStations.length} / {stations.length} 个车站

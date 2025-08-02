@@ -352,6 +352,14 @@ export default function Map() {
     router.push(`/station/${stationId}`);
   };
 
+  const handleZoomToCoordinates = (latitude: number, longitude: number) => {
+    if (map) {
+      const position = new google.maps.LatLng(latitude, longitude);
+      map.setCenter(position);
+      map.setZoom(12); // Zoom to a detailed level
+    }
+  };
+
   const handleDeleteLastStation = () => {
     setSelectedRoute(prev => prev.slice(0, -1));
   };
@@ -1072,6 +1080,7 @@ export default function Map() {
         isOpen={showStationBoard}
         onClose={handleCloseStationBoard}
         onSelectStation={handleSelectStation}
+        onZoomToCoordinates={handleZoomToCoordinates}
       />
 
       {/* Train Dashboard */}

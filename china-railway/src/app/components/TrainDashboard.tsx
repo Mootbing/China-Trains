@@ -1,14 +1,17 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import locomotives from '../../../public/assets/data/locomotives.json';
 import cars from '../../../public/assets/data/cars.json';
+import { stationUtils, Station } from '../utils/stations';
 
 interface VehicleFromDB {
   id: string;
   model: string;
   type: string;
   station_id?: string;
+  route_id?: string;
 }
 
 interface VehicleData {
@@ -28,8 +31,10 @@ interface CombinedVehicleData extends VehicleData {
   database_id: string;
   vehicle_type: 'locomotive' | 'car';
   station_id?: string;
+  route_id?: string;
   serial_number: string;
   display_type: string;
+  station_name?: string;
 }
 
 interface TrainDashboardProps {
@@ -48,12 +53,35 @@ export default function TrainDashboard({ isOpen, onClose }: TrainDashboardProps)
   const [sortField, setSortField] = useState<SortField>('model');
   const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
   const [typeFilter, setTypeFilter] = useState<'all' | 'locomotive' | 'car'>('all');
+  const [stations, setStations] = useState<Station[]>([]);
+  const router = useRouter();
 
   useEffect(() => {
     if (isOpen) {
-      fetchAllVehicles();
+      fetchStationsAndVehicles();
     }
   }, [isOpen]);
+
+  const fetchStationsAndVehicles = async () => {
+    try {
+      setLoading(true);
+      
+      // Fetch stations first
+      const { stations: fetchedStations, error: stationsError } = await stationUtils.getAllStations();
+      if (stationsError) {
+        console.error('Error fetching stations:', stationsError);
+      } else if (fetchedStations) {
+        setStations(fetchedStations);
+      }
+      
+      // Then fetch vehicles
+      await fetchAllVehicles(fetchedStations || []);
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     let filtered = vehicles.filter(vehicle => {
@@ -105,18 +133,32 @@ export default function TrainDashboard({ isOpen, onClose }: TrainDashboardProps)
     setFilteredVehicles(filtered);
   }, [vehicles, searchTerm, sortField, sortOrder, typeFilter]);
 
-  const fetchAllVehicles = async () => {
+  const fetchAllVehicles = async (stationsData: Station[] = []) => {
     try {
-      setLoading(true);
       const response = await fetch('/api/player/vehicles');
       if (response.ok) {
         const data: VehicleFromDB[] = await response.json();
         console.log('All vehicles from DB:', data);
 
+        // Create station lookup map
+        const stationMap = new Map<string, Station>();
+        stationsData.forEach(station => {
+          stationMap.set(station.id, station);
+        });
+
         const combinedVehicles: CombinedVehicleData[] = data.map((vehicle, index) => {
           let vehicleDataFound: VehicleData | undefined;
           let vehicle_type: 'locomotive' | 'car';
           let display_type: string;
+
+          // Debug logging for vehicle data
+          console.log('Processing vehicle:', {
+            id: vehicle.id.substring(0, 8),
+            model: vehicle.model,
+            type: vehicle.type,
+            station_id: vehicle.station_id ? vehicle.station_id.substring(0, 8) : null,
+            route_id: vehicle.route_id ? vehicle.route_id.substring(0, 8) : null
+          });
 
           if (vehicle.type === 'locomotive') {
             vehicleDataFound = (locomotives as VehicleData[]).find(
@@ -132,14 +174,23 @@ export default function TrainDashboard({ isOpen, onClose }: TrainDashboardProps)
             display_type = vehicleDataFound?.type || 'Unknown Car';
           }
 
+          // Get station name if vehicle is at a station
+          let station_name: string | undefined;
+          if (vehicle.station_id) {
+            const station = stationMap.get(vehicle.station_id);
+            station_name = station ? (station.loc_name || station.name) : `车站 ${vehicle.station_id.substring(0, 8)}`;
+          }
+
           if (vehicleDataFound) {
             return {
               ...vehicleDataFound,
               database_id: vehicle.id,
               vehicle_type,
               station_id: vehicle.station_id,
+              route_id: vehicle.route_id,
               serial_number: vehicle.id.substring(0, 8), // First 8 characters as serial
-              display_type: display_type.charAt(0).toUpperCase() + display_type.slice(1)
+              display_type: display_type.charAt(0).toUpperCase() + display_type.slice(1),
+              station_name
             };
           }
 
@@ -158,8 +209,10 @@ export default function TrainDashboard({ isOpen, onClose }: TrainDashboardProps)
             database_id: vehicle.id,
             vehicle_type,
             station_id: vehicle.station_id,
+            route_id: vehicle.route_id,
             serial_number: vehicle.id.substring(0, 8),
-            display_type: vehicle_type === 'locomotive' ? 'Unknown Locomotive' : 'Unknown Car'
+            display_type: vehicle_type === 'locomotive' ? 'Unknown Locomotive' : 'Unknown Car',
+            station_name
           };
         });
 
@@ -169,8 +222,6 @@ export default function TrainDashboard({ isOpen, onClose }: TrainDashboardProps)
       }
     } catch (error) {
       console.error('Error fetching vehicles:', error);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -201,6 +252,19 @@ export default function TrainDashboard({ isOpen, onClose }: TrainDashboardProps)
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
       </svg>
     );
+  };
+
+  const handleVehicleClick = (vehicle: CombinedVehicleData) => {
+    if (vehicle.route_id) {
+      // Vehicle is currently running on a route, navigate to route page
+      router.push(`/routes/${vehicle.route_id}`);
+    } else if (vehicle.station_id) {
+      // Vehicle is at a station, navigate to station page
+      router.push(`/station/${vehicle.station_id}`);
+    } else {
+      // Vehicle status is unclear, just log for debugging
+      console.log('Vehicle has no clear location:', vehicle);
+    }
   };
 
   if (!isOpen) return null;
@@ -332,7 +396,8 @@ export default function TrainDashboard({ isOpen, onClose }: TrainDashboardProps)
               {filteredVehicles.map((vehicle, index) => (
                 <div
                   key={vehicle.database_id}
-                  className={`bg-white/5 hover:bg-white/10 rounded-lg transition-colors border border-white/10 overflow-hidden ${
+                  onClick={() => handleVehicleClick(vehicle)}
+                  className={`bg-white/5 hover:bg-white/10 rounded-lg transition-colors border border-white/10 overflow-hidden cursor-pointer ${
                     index % 2 === 0 ? 'bg-white/5' : 'bg-white/10'
                   }`}
                 >
@@ -383,10 +448,34 @@ export default function TrainDashboard({ isOpen, onClose }: TrainDashboardProps)
                       )}
                     </div>
                     <div className="col-span-2 text-white/70 text-xs">
-                      {vehicle.station_id ? (
-                        <span className="text-blue-400">站点: {vehicle.station_id.substring(0, 8)}...</span>
+                      {vehicle.route_id ? (
+                        <div className="text-yellow-400">
+                          <div className="flex items-center gap-1">
+                            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.293l-3-3a1 1 0 00-1.414 1.414L10.586 9H7a1 1 0 100 2h3.586l-1.293 1.293a1 1 0 101.414 1.414l3-3a1 1 0 000-1.414z" clipRule="evenodd" />
+                            </svg>
+                            运行中
+                          </div>
+                          <div className="text-white/50 text-xs mt-1">
+                            路线: {vehicle.route_id.substring(0, 8)}...
+                          </div>
+                        </div>
+                      ) : vehicle.station_id ? (
+                        <div className="text-blue-400">
+                          <div className="flex items-center gap-1">
+                            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                            </svg>
+                            <div>
+                              <div>{vehicle.station_name}</div>
+                            </div>
+                          </div>
+                          <div className="text-white/50 text-xs mt-1">
+                            ID: {vehicle.station_id.substring(0, 8)}...
+                          </div>
+                        </div>
                       ) : (
-                        <span className="text-yellow-400">运行中</span>
+                        <span className="text-gray-400">位置未知</span>
                       )}
                     </div>
                   </div>
