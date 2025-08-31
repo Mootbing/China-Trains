@@ -1,0 +1,25 @@
+{
+  "Home": {
+    "loading": "Loading..."
+  },
+  "Login": {
+    "emailRequired": "Email and password cannot be empty",
+    "passwordTooShort": "Password must be at least 6 characters long",
+    "passwordsDoNotMatch": "Passwords do not match",
+    "signUpSuccess": "Registration successful!",
+    "signUpError": "Registration failed",
+    "signInError": "Login failed",
+    "networkError": "Network error, please try again later",
+    "signIn": "Sign In",
+    "signUp": "Sign Up",
+    "emailLabel": "Email",
+    "passwordLabel": "Password",
+    "confirmPasswordLabel": "Confirm Password",
+    "noAccount": "Don’t have an account?",
+    "haveAccount": "Already have an account?",
+    "signInButton": "Sign In",
+    "signUpButton": "Sign Up",
+    "title": "China Railway",
+    "subtitle": "CRH"
+  }
+}

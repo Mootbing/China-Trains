@@ -1,8 +1,11 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
-import { AuthProvider } from "./contexts/AuthContext";
-import { PlayerProvider } from "./contexts/PlayerContext";
+import "../globals.css";
+import { AuthProvider } from "../contexts/AuthContext";
+import { PlayerProvider } from "../contexts/PlayerContext";
+import {NextIntlClientProvider} from 'next-intl';
+import {getMessages} from 'next-intl/server';
+import {setRequestLocale} from 'next-intl/server';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -19,13 +22,23 @@ export const metadata: Metadata = {
   description: "China Railway Network - Secure Login Portal",
 };
 
-export default function RootLayout({
+export function generateStaticParams() {
+  return [{locale: 'en'}, {locale: 'es'}, {locale: 'zh'}];
+}
+
+export default async function RootLayout({
   children,
+  params
 }: Readonly<{
   children: React.ReactNode;
+  params: {locale: string};
 }>) {
+  const { locale } = await params;
+  setRequestLocale(locale);
+  const messages = await getMessages();
+
   return (
-    <html lang="en">
+    <html lang={locale}>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
@@ -37,11 +50,13 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <AuthProvider>
-          <PlayerProvider>
-            {children}
-          </PlayerProvider>
-        </AuthProvider>
+        <NextIntlClientProvider messages={messages}>
+          <AuthProvider>
+            <PlayerProvider>
+              {children}
+            </PlayerProvider>
+          </AuthProvider>
+        </NextIntlClientProvider>
       </body>
     </html>
   );

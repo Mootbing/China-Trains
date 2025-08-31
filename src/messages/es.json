@@ -1,0 +1,25 @@
+{
+  "Home": {
+    "loading": "Cargando..."
+  },
+  "Login": {
+    "emailRequired": "El correo electrónico y la contraseña no pueden estar vacíos",
+    "passwordTooShort": "La contraseña debe tener al menos 6 caracteres",
+    "passwordsDoNotMatch": "Las contraseñas no coinciden",
+    "signUpSuccess": "¡Registro exitoso!",
+    "signUpError": "Error en el registro",
+    "signInError": "Error al iniciar sesión",
+    "networkError": "Error de red, por favor intente más tarde",
+    "signIn": "Iniciar sesión",
+    "signUp": "Registrarse",
+    "emailLabel": "Correo electrónico",
+    "passwordLabel": "Contraseña",
+    "confirmPasswordLabel": "Confirmar contraseña",
+    "noAccount": "¿No tienes una cuenta?",
+    "haveAccount": "¿Ya tienes una cuenta?",
+    "signInButton": "Iniciar sesión",
+    "signUpButton": "Registrarse",
+    "title": "Ferrocarriles de China",
+    "subtitle": "CRH"
+  }
+}

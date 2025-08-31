@@ -5,8 +5,10 @@ import { useAuth } from '../contexts/AuthContext';
 import Track from '../components/Track';
 import Train from '../components/Train';
 import { useLocomotive, useCar } from '../hooks/useTrainData';
+import { useTranslations } from 'next-intl';
 
 export default function Login() {
+  const t = useTranslations('Login');
   const { user, loading: authLoading, signInWithEmail, signUpWithEmail } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
@@ -34,17 +36,17 @@ export default function Login() {
 
   const validateForm = () => {
     if (!formData.email || !formData.password) {
-      setError('邮箱和密码不能为空');
+      setError(t('emailRequired'));
       return false;
     }
 
     if (formData.password.length < 6) {
-      setError('密码长度至少为6位');
+      setError(t('passwordTooShort'));
       return false;
     }
 
     if (isSignUp && formData.password !== formData.confirmPassword) {
-      setError('两次输入的密码不一致');
+      setError(t('passwordsDoNotMatch'));
       return false;
     }
 
@@ -68,7 +70,7 @@ export default function Login() {
         );
         
         if (success) {
-          setMessage(signUpMessage || '注册成功！');
+          setMessage(signUpMessage || t('signUpSuccess'));
           // Switch to sign in mode after successful signup
           setTimeout(() => {
             setIsSignUp(false);
@@ -79,7 +81,7 @@ export default function Login() {
             });
           }, 2000);
         } else {
-          setError(signUpError || '注册失败');
+          setError(signUpError || t('signUpError'));
         }
       } else {
         const { success, error: signInError } = await signInWithEmail(
@@ -88,12 +90,12 @@ export default function Login() {
         );
         
         if (!success) {
-          setError(signInError || '登录失败');
+          setError(signInError || t('signInError'));
         }
       }
     } catch (error) {
       console.error('Authentication failed:', error);
-      setError('网络错误，请稍后重试');
+      setError(t('networkError'));
     } finally {
       setIsLoading(false);
     }
@@ -127,10 +129,10 @@ export default function Login() {
         {/* Title */}
         <div className="text-center mb-8">
           <h1 className="text-6xl font-light text-white mb-2 tracking-wide">
-            铁道帝国
+            {t('title')}
           </h1>
           <h2 className="text-xl font-light text-white/80 tracking-widest">
-            Iron Empire
+            {t('subtitle')}
           </h2>
         </div>
 
@@ -142,7 +144,7 @@ export default function Login() {
               <input
                 type="email"
                 name="email"
-                placeholder="邮箱地址"
+                placeholder={t('emailLabel')}
                 value={formData.email}
                 onChange={handleInputChange}
                 required
@@ -154,7 +156,7 @@ export default function Login() {
               <input
                 type="password"
                 name="password"
-                placeholder="密码"
+                placeholder={t('passwordLabel')}
                 value={formData.password}
                 onChange={handleInputChange}
                 required
@@ -167,7 +169,7 @@ export default function Login() {
                 <input
                   type="password"
                   name="confirmPassword"
-                  placeholder="确认密码"
+                  placeholder={t('confirmPasswordLabel')}
                   value={formData.confirmPassword}
                   onChange={handleInputChange}
                   required
@@ -196,7 +198,7 @@ export default function Login() {
               {isLoading ? (
                 <div className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin"></div>
               ) : (
-                <span>{isSignUp ? '注册' : '登录'}</span>
+                <span>{isSignUp ? t('signUpButton') : t('signInButton')}</span>
               )}
             </button>
           </form>
@@ -206,7 +208,7 @@ export default function Login() {
               onClick={toggleMode}
               className="text-white/60 hover:text-white transition-colors text-sm"
             >
-              {isSignUp ? '已有账户？点击登录' : '没有账户？点击注册'}
+              {isSignUp ? t('haveAccount') : t('noAccount')}
             </button>
           </div>
         </div>
