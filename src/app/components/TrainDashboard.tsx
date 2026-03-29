@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import locomotives from '../../../public/assets/data/locomotives.json';
 import cars from '../../../public/assets/data/cars.json';
 import { stationUtils, Station } from '../utils/stations';
+import { useBoardAnimation } from '../hooks/useBoardAnimation';
 
 interface VehicleFromDB {
   id: string;
@@ -46,6 +47,7 @@ type SortField = 'model' | 'serial_number' | 'type';
 type SortOrder = 'asc' | 'desc';
 
 export default function TrainDashboard({ isOpen, onClose }: TrainDashboardProps) {
+  const { mounted, phase } = useBoardAnimation(isOpen);
   const [vehicles, setVehicles] = useState<CombinedVehicleData[]>([]);
   const [filteredVehicles, setFilteredVehicles] = useState<CombinedVehicleData[]>([]);
   const [loading, setLoading] = useState(false);
@@ -138,7 +140,6 @@ export default function TrainDashboard({ isOpen, onClose }: TrainDashboardProps)
       const response = await fetch('/api/player/vehicles');
       if (response.ok) {
         const data: VehicleFromDB[] = await response.json();
-        console.log('All vehicles from DB:', data);
 
         // Create station lookup map
         const stationMap = new Map<string, Station>();
@@ -150,15 +151,6 @@ export default function TrainDashboard({ isOpen, onClose }: TrainDashboardProps)
           let vehicleDataFound: VehicleData | undefined;
           let vehicle_type: 'locomotive' | 'car';
           let display_type: string;
-
-          // Debug logging for vehicle data
-          console.log('Processing vehicle:', {
-            id: vehicle.id.substring(0, 8),
-            model: vehicle.model,
-            type: vehicle.type,
-            station_id: vehicle.station_id ? vehicle.station_id.substring(0, 8) : null,
-            route_id: vehicle.route_id ? vehicle.route_id.substring(0, 8) : null
-          });
 
           if (vehicle.type === 'locomotive') {
             vehicleDataFound = (locomotives as VehicleData[]).find(
@@ -263,17 +255,16 @@ export default function TrainDashboard({ isOpen, onClose }: TrainDashboardProps)
       router.push(`/station/${vehicle.station_id}`);
     } else {
       // Vehicle status is unclear, just log for debugging
-      console.log('Vehicle has no clear location:', vehicle);
     }
   };
 
-  if (!isOpen) return null;
+  if (!mounted) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="bg-black/90 border border-white/20 rounded-lg w-full max-w-6xl max-h-[80vh] overflow-hidden">
+    <div className={`fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 ${phase === 'enter' ? 'board-backdrop-enter' : 'board-backdrop-exit'}`}>
+      <div className={`bg-black border border-white/30 rounded-lg w-full max-w-6xl max-h-[80vh] overflow-hidden ${phase === 'enter' ? 'board-panel-enter' : 'board-panel-exit'}`}>
         {/* Header */}
-        <div className="border-b border-white/20 p-4 bg-white/5">
+        <div className="border-b border-white/30 p-4">
           <div className="flex items-center justify-between gap-4">
             <div className="flex-shrink-0">
               <h2 className="text-xl font-bold text-white">
@@ -397,9 +388,10 @@ export default function TrainDashboard({ isOpen, onClose }: TrainDashboardProps)
                 <div
                   key={vehicle.database_id}
                   onClick={() => handleVehicleClick(vehicle)}
-                  className={`bg-white/5 hover:bg-white/10 rounded-lg transition-colors border border-white/10 overflow-hidden cursor-pointer ${
-                    index % 2 === 0 ? 'bg-white/5' : 'bg-white/10'
+                  className={`hover:bg-white/10 rounded-lg transition-colors border border-white/10 overflow-hidden cursor-pointer board-row-enter ${
+                    index % 2 === 0 ? '' : 'bg-white/5'
                   }`}
+                  style={{ animationDelay: `${index * 30}ms` }}
                 >
                   {/* Train Image Row */}
                   <div className="px-4 py-3 border-b border-white/10">
@@ -486,7 +478,7 @@ export default function TrainDashboard({ isOpen, onClose }: TrainDashboardProps)
         </div>
 
         {/* Footer */}
-        <div className="border-t border-white/20 p-4 bg-white/5">
+        <div className="border-t border-white/30 p-4">
           <div className="flex items-center justify-between text-sm text-white/60">
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-2">

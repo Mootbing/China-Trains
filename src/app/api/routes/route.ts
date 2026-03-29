@@ -86,13 +86,7 @@ export async function GET(request: NextRequest) {
     // Create station lookup map
     const stationMap: { [key: string]: Station } = {};
     (stations || []).forEach(station => {
-      stationMap[station.id] = {
-        id: station.id,
-        latitude: station.latitude,
-        longitude: station.longitude,
-        name: station.name,
-        loc_name: station.loc_name
-      };
+      stationMap[station.id] = station;
     });
 
     // Get all unique vehicle IDs from all routes

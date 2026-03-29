@@ -6,6 +6,7 @@ import { PlayerProvider } from "../contexts/PlayerContext";
 import {NextIntlClientProvider} from 'next-intl';
 import {getMessages} from 'next-intl/server';
 import {setRequestLocale} from 'next-intl/server';
+import {locales} from '../../navigation';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -23,7 +24,7 @@ export const metadata: Metadata = {
 };
 
 export function generateStaticParams() {
-  return [{locale: 'en'}, {locale: 'es'}, {locale: 'zh'}];
+  return locales.map((locale) => ({locale}));
 }
 
 export default async function RootLayout({

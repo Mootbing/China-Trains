@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Station } from '../utils/stations';
+import { useBoardAnimation } from '../hooks/useBoardAnimation';
 
 interface StationBoardProps {
   isOpen: boolean;
@@ -11,6 +12,7 @@ interface StationBoardProps {
 }
 
 export default function StationBoard({ isOpen, onClose, onSelectStation, onZoomToCoordinates }: StationBoardProps) {
+  const { mounted, phase } = useBoardAnimation(isOpen);
   const [stations, setStations] = useState<Station[]>([]);
   const [stationVehicleCounts, setStationVehicleCounts] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(false);
@@ -151,7 +153,7 @@ export default function StationBoard({ isOpen, onClose, onSelectStation, onZoomT
     );
   };
 
-  if (!isOpen) return null;
+  if (!mounted) return null;
 
   const handleStationClick = (station: Station) => {
     onSelectStation(station.id);
@@ -167,10 +169,10 @@ export default function StationBoard({ isOpen, onClose, onSelectStation, onZoomT
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="bg-black/90 border border-white/20 rounded-lg w-full max-w-4xl max-h-[80vh] overflow-hidden">
+    <div className={`fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 ${phase === 'enter' ? 'board-backdrop-enter' : 'board-backdrop-exit'}`}>
+      <div className={`bg-black border border-white/30 rounded-lg w-full max-w-4xl max-h-[80vh] overflow-hidden ${phase === 'enter' ? 'board-panel-enter' : 'board-panel-exit'}`}>
         {/* Header */}
-        <div className="border-b border-white/20 p-4 bg-white/5">
+        <div className="border-b border-white/30 p-4">
           <div className="flex items-center justify-between gap-4">
             <div className="flex-shrink-0">
               <h2 className="text-xl font-bold text-white">
@@ -281,10 +283,11 @@ export default function StationBoard({ isOpen, onClose, onSelectStation, onZoomT
               </div>
 
               {/* Station Rows */}
-              {sortedStations.map((station) => (
+              {sortedStations.map((station, i) => (
                 <div
                   key={station.id}
-                  className="grid grid-cols-12 gap-4 py-3 px-4 bg-white/5 hover:bg-white/10 rounded-lg transition-colors border border-white/10 cursor-pointer"
+                  className="grid grid-cols-12 gap-4 py-3 px-4 hover:bg-white/10 rounded-lg transition-colors border border-white/10 cursor-pointer board-row-enter"
+                  style={{ animationDelay: `${i * 40}ms` }}
                   onClick={() => handleStationClick(station)}
                 >
                   <div className="col-span-4">
@@ -334,7 +337,7 @@ export default function StationBoard({ isOpen, onClose, onSelectStation, onZoomT
         </div>
 
         {/* Footer */}
-        <div className="border-t border-white/20 p-4 bg-white/5">
+        <div className="border-t border-white/30 p-4">
           <div className="flex items-center justify-between text-sm text-white/60">
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-2">

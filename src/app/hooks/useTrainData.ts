@@ -1,56 +1,6 @@
 import { useState, useEffect } from 'react';
 import { loadLocomotives, loadCars, Locomotive, Car } from '../utils/dataLoader';
 
-export function useLocomotives() {
-  const [locomotives, setLocomotives] = useState<Locomotive[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchLocomotives = async () => {
-      try {
-        setLoading(true);
-        const data = await loadLocomotives();
-        setLocomotives(data);
-        setError(null);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load locomotives');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchLocomotives();
-  }, []);
-
-  return { locomotives, loading, error };
-}
-
-export function useCars() {
-  const [cars, setCars] = useState<Car[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchCars = async () => {
-      try {
-        setLoading(true);
-        const data = await loadCars();
-        setCars(data);
-        setError(null);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load cars');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchCars();
-  }, []);
-
-  return { cars, loading, error };
-}
-
 export function useLocomotive(id: number) {
   const [locomotive, setLocomotive] = useState<Locomotive | null>(null);
   const [loading, setLoading] = useState(true);

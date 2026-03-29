@@ -6,17 +6,12 @@ interface DockProps {
 }
 
 const Dock: React.FC<DockProps> = ({ children }) => {
-  const { player, loading, addMoney, addXP } = usePlayer();
+  const { player, loading } = usePlayer();
 
   // Calculate XP progress to next level
   const xpForCurrentLevel = (player.level - 1) * 1000;
   const xpForNextLevel = player.level * 1000;
   const xpProgress = ((player.xp - xpForCurrentLevel) / (xpForNextLevel - xpForCurrentLevel)) * 100;
-
-  const handleTestAdd = () => {
-    addMoney(1000);
-    addXP(100);
-  };
 
   return (
     <div
@@ -63,15 +58,7 @@ const Dock: React.FC<DockProps> = ({ children }) => {
               </div>
             </div>
 
-            {/* Test Button (remove in production) */}
-            <button
-              onClick={handleTestAdd}
-              className="px-2 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700 transition-colors"
-              title="Test: Add 1000 money and 100 XP"
-            >
-              +
-            </button>
-          </>
+</>
         )}
       </div>
 

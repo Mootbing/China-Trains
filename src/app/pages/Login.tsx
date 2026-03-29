@@ -119,8 +119,8 @@ export default function Login() {
   if (car) trainConsist.push(car);
   if (car) trainConsist.push(car);
   
-  const handleTrainItemClick = (item: any, index: number) => {
-    console.log(`Clicked ${item.en_name} at position ${index}`);
+  const handleTrainItemClick = (_item: any, _index: number) => {
+    // Click handler for train items
   };
 
   return (
@@ -215,8 +215,8 @@ export default function Login() {
       </div>
       
       {/* Track with Train (moving effect) */}
-      <Track 
-        className="bottom-100"
+      <Track
+        className="bottom-100 pointer-events-none"
         isMoving={true}
         speed={120}
         train={

@@ -3,7 +3,6 @@ import React, { useEffect, useState } from 'react';
 interface TrackProps {
   className?: string;
   train?: React.ReactNode;
-  trainPosition?: 'top' | 'bottom';
   electrified?: boolean;
   leftOffset?: number; // Offset for train position
   level?: number;

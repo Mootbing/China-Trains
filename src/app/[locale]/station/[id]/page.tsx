@@ -2,8 +2,8 @@
 
 import { useEffect, useState, use } from 'react';
 import { useRouter } from 'next/navigation';
-import { stationUtils, Station } from '../../utils/stations';
-import StationPage from '../../pages/Station';
+import { stationUtils, Station } from '../../../utils/stations';
+import StationPage from '../../../pages/Station';
 
 interface StationPageProps {
   params: Promise<{
@@ -23,7 +23,7 @@ export default function StationRoute({ params }: StationPageProps) {
       try {
         setLoading(true);
         const result = await stationUtils.getStationById(resolvedParams.id);
-        
+
         if (result.error) {
           setError(result.error);
         } else if (result.station) {
@@ -49,17 +49,14 @@ export default function StationRoute({ params }: StationPageProps) {
   };
 
   const handleDispatch = (startingStation: Station, vehicleIds?: number[], trainMetrics?: any) => {
-    // Store dispatch information in localStorage for the map to pick up
     const dispatchData = {
       startingStation,
       vehicleIds: vehicleIds || [],
       trainMetrics,
       timestamp: Date.now()
     };
-    
+
     localStorage.setItem('pendingDispatch', JSON.stringify(dispatchData));
-    
-    // Navigate back to map with dispatch parameter
     router.push('/?dispatch=true');
   };
 
@@ -77,7 +74,7 @@ export default function StationRoute({ params }: StationPageProps) {
         <div className="text-white text-xl font-bold">
           {error || '车站未找到'}
         </div>
-        <button 
+        <button
           onClick={handleBack}
           className="ml-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
         >
@@ -88,8 +85,8 @@ export default function StationRoute({ params }: StationPageProps) {
   }
 
   return (
-    <StationPage 
-      station={station} 
+    <StationPage
+      station={station}
       onBack={handleBack}
       onDispatch={handleDispatch}
     />

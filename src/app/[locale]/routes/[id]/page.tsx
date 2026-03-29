@@ -2,7 +2,7 @@
 
 import { useEffect, useState, use } from 'react';
 import { useRouter } from 'next/navigation';
-import TrainRunning from '../../pages/TrainRunning';
+import TrainRunning from '../../../pages/TrainRunning';
 
 interface RoutePageProps {
   params: Promise<{
@@ -23,7 +23,7 @@ export default function RoutePage({ params }: RoutePageProps) {
         setLoading(true);
         const response = await fetch(`/api/routes/${resolvedParams.id}`);
         const data = await response.json();
-        
+
         if (response.ok) {
           setRoute(data.route);
         } else {
@@ -48,7 +48,7 @@ export default function RoutePage({ params }: RoutePageProps) {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-black">
         <div className="text-white text-xl">加载中...</div>
       </div>
     );
@@ -56,11 +56,11 @@ export default function RoutePage({ params }: RoutePageProps) {
 
   if (error) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-black">
         <div className="text-white text-xl mb-4">错误: {error}</div>
         <button
           onClick={handleBack}
-          className="px-6 py-2 bg-white/20 backdrop-blur-sm rounded-lg border border-white/30 text-white hover:bg-white/30 transition-all duration-200"
+          className="px-6 py-2 border border-white/30 rounded-lg text-white hover:bg-white/10 transition-colors"
         >
           返回地图
         </button>

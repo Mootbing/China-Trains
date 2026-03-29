@@ -1,15 +1,10 @@
 // Route calculation utilities refactored from Map and Station components
 
-export interface Station {
-  id: string;
-  latitude: number;
-  longitude: number;
-  name: string;
-  loc_name?: string;
-}
+import { Station } from './stations';
+export type { Station } from './stations';
 
 export interface Vehicle {
-  id: string;
+  id: string | number;
   model: string;
   type: string;
   weight: number;
@@ -149,12 +144,12 @@ export const calculateTrainPosition = (
       percent_completion: 0,
       eta: formatTime(0),
       train_coordinates: {
-        latitude: stations[0].latitude,
-        longitude: stations[0].longitude
+        latitude: stations[0].latitude || 0,
+        longitude: stations[0].longitude || 0
       },
       next_train_coordinates: {
-        latitude: stations[0].latitude,
-        longitude: stations[0].longitude
+        latitude: stations[0].latitude || 0,
+        longitude: stations[0].longitude || 0
       }
     };
   }
@@ -221,19 +216,21 @@ export const calculateCoordinatesAlongRoute = (
     const current = stations[i];
     const next = stations[i + 1];
     
-    const segmentDistance = calculateDistance(
-      current.latitude, current.longitude,
-      next.latitude, next.longitude
-    );
+    const curLat = current.latitude || 0;
+    const curLng = current.longitude || 0;
+    const nextLat = next.latitude || 0;
+    const nextLng = next.longitude || 0;
+
+    const segmentDistance = calculateDistance(curLat, curLng, nextLat, nextLng);
 
     if (remainingDistance <= segmentDistance) {
       // Train is within this segment
       const progress = remainingDistance / segmentDistance;
-      
+
       // Linear interpolation between current and next station
-      const latitude = current.latitude + (next.latitude - current.latitude) * progress;
-      const longitude = current.longitude + (next.longitude - current.longitude) * progress;
-      
+      const latitude = curLat + (nextLat - curLat) * progress;
+      const longitude = curLng + (nextLng - curLng) * progress;
+
       return { latitude, longitude };
     }
 
@@ -243,7 +240,7 @@ export const calculateCoordinatesAlongRoute = (
   // Train has completed the route or gone beyond
   const lastStation = stations[stations.length - 1];
   return {
-    latitude: lastStation.latitude,
-    longitude: lastStation.longitude
+    latitude: lastStation.latitude || 0,
+    longitude: lastStation.longitude || 0
   };
 };

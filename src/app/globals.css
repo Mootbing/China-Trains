@@ -25,6 +25,50 @@ body {
   font-family: 'Noto Sans SC', var(--font-sans), Arial, Helvetica, sans-serif;
 }
 
+/* Contain Leaflet's internal z-indices within its container */
+.leaflet-container {
+  z-index: 0;
+}
+
+/* Board panel animations */
+@keyframes board-backdrop-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes board-backdrop-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+@keyframes board-panel-in {
+  from { opacity: 0; transform: scale(0.92) translateY(16px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+@keyframes board-panel-out {
+  from { opacity: 1; transform: scale(1) translateY(0); }
+  to { opacity: 0; transform: scale(0.92) translateY(16px); }
+}
+@keyframes board-row-in {
+  from { opacity: 0; transform: translateX(-12px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.board-backdrop-enter {
+  animation: board-backdrop-in 0.2s ease-out forwards;
+}
+.board-backdrop-exit {
+  animation: board-backdrop-out 0.15s ease-in forwards;
+}
+.board-panel-enter {
+  animation: board-panel-in 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+.board-panel-exit {
+  animation: board-panel-out 0.15s ease-in forwards;
+}
+.board-row-enter {
+  animation: board-row-in 0.25s ease-out forwards;
+  opacity: 0;
+}
+
 /* Ensure backdrop-blur works properly across browsers */
 @supports (backdrop-filter: blur(0px)) {
   .backdrop-blur-xl {

@@ -48,15 +48,12 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
 
     try {
       setLoading(true);
-      console.log('Loading player data for user:', user.id);
-      
       const { data, error } = await playerUtils.getPlayerData();
 
       if (error) {
         console.error('Error loading player data:', error);
         setPlayer({ money: 10000, xp: 0, level: 1 });
       } else if (data) {
-        console.log('Loaded player data:', data);
         const level = calculateLevel(data.xp);
         setPlayer({
           money: Number(data.money),
@@ -93,7 +90,6 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     if (!user) return;
 
     try {
-      console.log('Saving player data:', { id: user.id, money: player.money, xp: player.xp });
       // Only save money and xp, level is calculated dynamically
       const { error } = await playerUtils.updatePlayerData({
         money: player.money,
@@ -102,8 +98,6 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
 
       if (error) {
         console.error('Error saving player data:', error);
-      } else {
-        console.log('Player data saved successfully');
       }
     } catch (error) {
       console.error('Error saving player data:', error);
@@ -111,13 +105,11 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
   };
 
   const addMoney = (amount: number) => {
-    console.log('Adding money:', amount);
     setPlayer(prev => ({ ...prev, money: prev.money + amount }));
   };
 
   const spendMoney = (amount: number): boolean => {
     if (player.money >= amount) {
-      console.log('Spending money:', amount);
       setPlayer(prev => ({ ...prev, money: prev.money - amount }));
       return true;
     }
@@ -125,7 +117,6 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
   };
 
   const addXP = (amount: number) => {
-    console.log('Adding XP:', amount);
     setPlayer(prev => ({ ...prev, xp: prev.xp + amount }));
   };
 

@@ -1,28 +1,18 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Track from '../components/Track';
 import Train from '../components/Train';
-import Locomotive from '../components/Locomotive';
-import TrainCar from '../components/TrainCar';
+import { TrainMetrics, calculateTrainMetrics, formatTime } from '../utils/route-utils';
 
 interface TrainRunningProps {
   route: any;
   onBack: () => void;
 }
 
-interface TrainMetrics {
-  totalWeight: number;
-  maxWeight: number;
-  maxSpeed: number;
-  effectiveSpeed: number;
-  isOverweight: boolean;
-}
-
 const TrainRunning: React.FC<TrainRunningProps> = ({ route, onBack }) => {
   const [showTimetable, setShowTimetable] = useState(false);
-  const [vibrationOffset, setVibrationOffset] = useState({ x: 0, y: 0 });
   const router = useRouter();
 
   if (!route) {
@@ -38,70 +28,12 @@ const TrainRunning: React.FC<TrainRunningProps> = ({ route, onBack }) => {
     );
   }
 
-  // Calculate train performance metrics similar to Station.tsx
-  const calculateTrainMetrics = (): TrainMetrics => {
-    const vehicles = route.vehicles || [];
-    const locomotives = vehicles.filter((vehicle: any) => 'max_speed' in vehicle && 'max_weight' in vehicle);
-    const cars = vehicles.filter((vehicle: any) => !('max_speed' in vehicle));
-    
-    if (locomotives.length === 0) {
-      return { totalWeight: 0, maxWeight: 0, maxSpeed: 0, effectiveSpeed: 0, isOverweight: false };
-    }
-
-    // Calculate total weight (locomotive + cars)
-    const locomotiveWeight = locomotives.reduce((sum: number, loco: any) => sum + (loco.weight || 0), 0);
-    const carWeight = cars.reduce((sum: number, car: any) => sum + (car.weight || 0), 0);
-    const totalWeight = locomotiveWeight + carWeight;
-
-    // Get max weight and speed from locomotives
-    const maxWeight = locomotives.reduce((sum: number, loco: any) => sum + (loco.max_weight || 0), 0);
-    const maxSpeed = Math.max(...locomotives.map((loco: any) => loco.max_speed || 0));
-
-    // Calculate effective speed based on weight
-    let effectiveSpeed = maxSpeed;
-    const isOverweight = totalWeight > maxWeight;
-    
-    if (isOverweight && maxWeight > 0) {
-      const weightRatio = (totalWeight - maxWeight) / maxWeight;
-      effectiveSpeed = Math.max(1, maxSpeed * (1 - weightRatio));
-    }
-
-    return { totalWeight, maxWeight, maxSpeed, effectiveSpeed, isOverweight };
-  };
-
-  const trainMetrics = calculateTrainMetrics();
-
-  // Add subtle vibration effect for high speeds
-  useEffect(() => {
-    if (trainMetrics.effectiveSpeed > 80) {
-      const intensity = Math.min((trainMetrics.effectiveSpeed - 80) / 100, 1);
-      const interval = setInterval(() => {
-        setVibrationOffset({
-          x: (Math.random() - 0.5) * intensity * 2,
-          y: (Math.random() - 0.5) * intensity * 1
-        });
-      }, 50);
-
-      return () => clearInterval(interval);
-    } else {
-      setVibrationOffset({ x: 0, y: 0 });
-    }
-  }, [trainMetrics.effectiveSpeed]);
-
-  const formatTime = (hours: number) => {
-    const h = Math.floor(hours);
-    const m = Math.floor((hours - h) * 60);
-    const s = Math.floor(((hours - h) * 60 - m) * 60);
-    return `${h}h ${m}m ${s}s`;
-  };
+  // Calculate train performance metrics using shared utility
+  const trainMetrics = calculateTrainMetrics(route.vehicles || []);
 
   return (
     <div 
       className='relative overflow-hidden h-screen w-screen bg-black'
-      style={{
-        // transform: `translate(${vibrationOffset.x}px, ${vibrationOffset.y}px)`,
-        transition: 'none'
-      }}
     >
       
       {/* Back Button */}

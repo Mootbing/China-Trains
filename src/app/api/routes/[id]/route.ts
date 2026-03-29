@@ -87,16 +87,9 @@ export async function GET(
     }
 
     // Create station lookup map and ordered stations
-    const stationMap: { [key: string]: Station & { level?: number } } = {};
+    const stationMap: { [key: string]: Station } = {};
     (stations || []).forEach(station => {
-      stationMap[station.id] = {
-        id: station.id,
-        latitude: station.latitude,
-        longitude: station.longitude,
-        name: station.name,
-        loc_name: station.loc_name,
-        level: station.level
-      };
+      stationMap[station.id] = station;
     });
 
     // Get ordered stations based on route

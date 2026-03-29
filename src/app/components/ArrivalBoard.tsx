@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Station } from '../utils/stations';
+import { useBoardAnimation } from '../hooks/useBoardAnimation';
 
 interface RouteData {
   id: string;
@@ -37,6 +38,7 @@ interface ArrivalBoardProps {
 
 export default function ArrivalBoard({ isOpen, onClose, stationId, stations }: ArrivalBoardProps) {
   const router = useRouter();
+  const { mounted, phase } = useBoardAnimation(isOpen);
   const [arrivals, setArrivals] = useState<ArrivalData[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedStation, setSelectedStation] = useState<Station | null>(null);
@@ -78,7 +80,6 @@ export default function ArrivalBoard({ isOpen, onClose, stationId, stations }: A
       // Always ensure we have all stations loaded, but only if we don't have them already
       let stationsToUse = allStations;
       if (allStations.length <= 1 || (stationId && !allStations.find(s => s.id === stationId))) {
-        console.log('Loading all stations for arrival board...');
         stationsToUse = await loadAllStations();
       }
       
@@ -87,8 +88,6 @@ export default function ArrivalBoard({ isOpen, onClose, stationId, stations }: A
       
       if (response.ok && data.routes) {
         const processedArrivals: ArrivalData[] = [];
-        
-        console.log('Processing routes for arrival board:', data.routes.length);
         
         data.routes.forEach((route: RouteData) => {
           // Skip completed routes
@@ -174,7 +173,7 @@ export default function ArrivalBoard({ isOpen, onClose, stationId, stations }: A
     }
   }, [isOpen, stationId]); // Removed allStations dependency to prevent constant refetching
 
-  if (!isOpen) return null;
+  if (!mounted) return null;
 
   // Filter arrivals based on search term
   const filteredArrivals = arrivals.filter(arrival => {
@@ -266,10 +265,10 @@ export default function ArrivalBoard({ isOpen, onClose, stationId, stations }: A
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="bg-black/90 border border-white/20 rounded-lg w-full max-w-4xl max-h-[80vh] overflow-hidden">
+    <div className={`fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 ${phase === 'enter' ? 'board-backdrop-enter' : 'board-backdrop-exit'}`}>
+      <div className={`bg-black border border-white/30 rounded-lg w-full max-w-4xl max-h-[80vh] overflow-hidden ${phase === 'enter' ? 'board-panel-enter' : 'board-panel-exit'}`}>
         {/* Header */}
-        <div className="border-b border-white/20 p-4 bg-white/5">
+        <div className="border-b border-white/30 p-4">
           <div className="flex items-center justify-between gap-4">
             <div className="flex-shrink-0">
               <h2 className="text-xl font-bold text-white">
@@ -387,11 +386,12 @@ export default function ArrivalBoard({ isOpen, onClose, stationId, stations }: A
               </div>
 
               {/* Arrival Rows */}
-              {sortedArrivals.map((arrival) => (
+              {sortedArrivals.map((arrival, i) => (
                 <div
                   key={arrival.routeId}
                   onClick={() => handleRowClick(arrival.routeId)}
-                  className="grid grid-cols-12 gap-4 py-3 px-4 bg-white/5 hover:bg-white/10 rounded-lg transition-colors border border-white/10 cursor-pointer"
+                  className="grid grid-cols-12 gap-4 py-3 px-4 hover:bg-white/10 rounded-lg transition-colors border border-white/10 cursor-pointer board-row-enter"
+                  style={{ animationDelay: `${i * 40}ms` }}
                 >
                   <div className="col-span-2">
                     <div className="font-mono text-white font-medium">
@@ -439,7 +439,7 @@ export default function ArrivalBoard({ isOpen, onClose, stationId, stations }: A
         </div>
 
         {/* Footer */}
-        <div className="border-t border-white/20 p-4 bg-white/5">
+        <div className="border-t border-white/30 p-4">
           <div className="flex items-center justify-between text-sm text-white/60">
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-2">

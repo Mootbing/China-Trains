@@ -55,26 +55,4 @@ export async function loadCars(): Promise<Car[]> {
   }
 }
 
-// Get locomotive by ID
-export async function getLocomotiveById(id: number): Promise<Locomotive | null> {
-  const locomotives = await loadLocomotives();
-  return locomotives.find((loco: Locomotive) => loco.id === id) || null;
-}
-
-// Get car by ID
-export async function getCarById(id: number): Promise<Car | null> {
-  const cars = await loadCars();
-  return cars.find((car: Car) => car.id === id) || null;
-}
-
-// Get locomotives by type
-export async function getLocomotivesByType(type: 'electric' | 'diesel' | 'steam'): Promise<Locomotive[]> {
-  const locomotives = await loadLocomotives();
-  return locomotives.filter((loco: Locomotive) => loco.type === type);
-}
-
-// Get cars by type
-export async function getCarsByType(type: 'passenger' | 'freight'): Promise<Car[]> {
-  const cars = await loadCars();
-  return cars.filter((car: Car) => car.type === type);
-} 
+ 
