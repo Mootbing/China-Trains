@@ -1,8 +1,7 @@
-import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
 import { promises as fs } from 'fs';
 import path from 'path';
+import { createAuthenticatedClient } from '../../utils/supabase-server';
 import {
   calculateRouteDistance,
   calculateTrainMetrics,
@@ -12,46 +11,19 @@ import {
   TrainMetrics,
   RouteProgress
 } from '../../utils/route-utils';
+import { completeRoute } from '../../utils/route-completion';
 
 export async function GET(request: NextRequest) {
   try {
-    const cookieStore = await cookies();
-    
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          getAll() {
-            return cookieStore.getAll();
-          },
-          setAll(cookiesToSet) {
-            try {
-              cookiesToSet.forEach(({ name, value, options }) =>
-                cookieStore.set(name, value, options)
-              );
-            } catch {
-              // The `setAll` method was called from a Server Component.
-              // This can be ignored if you have middleware refreshing
-              // user sessions.
-            }
-          },
-        },
-      }
-    );
-    
-    // Get the current user
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    
-    if (userError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const { supabase, user } = await createAuthenticatedClient();
 
-    // Fetch all routes for the current user
+    // Fetch active (non-completed) routes for the current user
+    const showCompleted = request.nextUrl.searchParams.get('status') === 'completed';
     const { data: routes, error } = await supabase
       .from('routes')
       .select('*')
       .eq('user_id', user.id)
+      .eq('completed', showCompleted)
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -65,13 +37,13 @@ export async function GET(request: NextRequest) {
     // Load locomotive and car data from JSON files
     const locomotivesPath = path.join(process.cwd(), 'public/assets/data/locomotives.json');
     const carsPath = path.join(process.cwd(), 'public/assets/data/cars.json');
-    
+
     const locomotivesData = JSON.parse(await fs.readFile(locomotivesPath, 'utf8'));
     const carsData = JSON.parse(await fs.readFile(carsPath, 'utf8'));
 
     // Get all unique station IDs from all routes
     const allStationIds = [...new Set(routes.flatMap(route => route.all_station_ids || []))];
-    
+
     // Fetch station data
     const { data: stations, error: stationsError } = await supabase
       .from('stations')
@@ -91,7 +63,7 @@ export async function GET(request: NextRequest) {
 
     // Get all unique vehicle IDs from all routes
     const allVehicleIds = [...new Set(routes.flatMap(route => route.all_vehicle_ids || []))];
-    
+
     // Fetch vehicle data
     const { data: vehicles, error: vehiclesError } = await supabase
       .from('vehicles')
@@ -109,9 +81,9 @@ export async function GET(request: NextRequest) {
       // Find corresponding locomotive or car data
       const locomotiveData = locomotivesData.find((loco: any) => loco.model === vehicle.model);
       const carData = carsData.find((car: any) => car.model === vehicle.model);
-      
+
       const baseData = locomotiveData || carData;
-      
+
       vehicleMap[vehicle.id] = {
         id: vehicle.id,
         model: vehicle.model,
@@ -159,23 +131,64 @@ export async function GET(request: NextRequest) {
         );
       }
 
+      // For completed routes, include distance info
+      const totalDistance = routeStations.length >= 2
+        ? calculateRouteDistance(routeStations)
+        : 0;
+
       return {
         ...route,
         percent_completion: routeProgress.percent_completion,
         eta: routeProgress.eta,
         train_coordinates: routeProgress.train_coordinates,
-        next_train_coordinates: routeProgress.next_train_coordinates
+        next_train_coordinates: routeProgress.next_train_coordinates,
+        total_distance: Math.round(totalDistance),
       };
     });
 
-    return NextResponse.json({ 
+    // Auto-complete routes that have reached 100% but are still marked incomplete
+    const justCompleted: Array<{ route_id: string; money_earned: number; xp_earned: number; end_station: string }> = [];
+
+    if (!showCompleted) {
+      const readyToComplete = enhancedRoutes.filter(
+        (r: any) => r.percent_completion >= 100 && !r.completed
+      );
+
+      for (const route of readyToComplete) {
+        try {
+          const result = await completeRoute(supabase, route, user.id);
+          justCompleted.push({
+            route_id: route.id,
+            money_earned: result.money_earned,
+            xp_earned: result.xp_earned,
+            end_station: result.end_station,
+          });
+        } catch (err) {
+          console.error('Auto-complete failed for route', route.id, err);
+        }
+      }
+
+      // Remove auto-completed routes from the active list
+      const completedIds = new Set(justCompleted.map(jc => jc.route_id));
+      const activeRoutes = enhancedRoutes.filter((r: any) => !completedIds.has(r.id));
+
+      return NextResponse.json({
+        routes: activeRoutes,
+        just_completed: justCompleted,
+      });
+    }
+
+    return NextResponse.json({
       routes: enhancedRoutes
     });
-  } catch (error) {
+  } catch (error: any) {
+    if (error?.message === 'Unauthorized') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
     console.error('Get routes error:', error);
     return NextResponse.json(
-      { error: 'Internal server error' }, 
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }
-} 
+}

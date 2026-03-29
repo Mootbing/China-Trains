@@ -1,10 +1,16 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Track from '../components/Track';
 import Train from '../components/Train';
 import { TrainMetrics, calculateTrainMetrics, formatTime } from '../utils/route-utils';
+
+interface CompletionData {
+  money_earned: number;
+  xp_earned: number;
+  end_station: string;
+}
 
 interface TrainRunningProps {
   route: any;
@@ -13,7 +19,40 @@ interface TrainRunningProps {
 
 const TrainRunning: React.FC<TrainRunningProps> = ({ route, onBack }) => {
   const [showTimetable, setShowTimetable] = useState(false);
+  const [completion, setCompletion] = useState<CompletionData | null>(null);
+  const [completing, setCompleting] = useState(false);
   const router = useRouter();
+
+  // Auto-detect and trigger completion
+  const completeRoute = useCallback(async () => {
+    if (!route?.id || completing || completion) return;
+    setCompleting(true);
+    try {
+      const res = await fetch(`/api/routes/${route.id}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'complete' }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setCompletion({
+          money_earned: data.money_earned,
+          xp_earned: data.xp_earned,
+          end_station: data.end_station,
+        });
+      }
+    } catch {
+      // Silently fail — will retry on next check
+    } finally {
+      setCompleting(false);
+    }
+  }, [route?.id, completing, completion]);
+
+  useEffect(() => {
+    if (route?.percent_completion >= 100 && !completion && !route?.completed) {
+      completeRoute();
+    }
+  }, [route?.percent_completion, route?.completed, completion, completeRoute]);
 
   if (!route) {
     return (
@@ -176,6 +215,40 @@ const TrainRunning: React.FC<TrainRunningProps> = ({ route, onBack }) => {
           }
         />
       </div>
+
+      {/* Route Completion Overlay */}
+      {completion && (
+        <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4 board-backdrop-enter">
+          <div className="bg-black border border-white/30 rounded-lg p-8 max-w-md w-full board-panel-enter text-center">
+            <div className="w-16 h-16 border border-white/30 rounded-full flex items-center justify-center mx-auto mb-6">
+              <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+
+            <h2 className="text-2xl font-bold text-white mb-2">列车到站</h2>
+            <p className="text-white/60 mb-6">已抵达 {completion.end_station}</p>
+
+            <div className="flex justify-center gap-8 mb-8">
+              <div>
+                <p className="text-white/40 text-xs uppercase tracking-wider mb-1">收入</p>
+                <p className="text-2xl font-mono font-bold text-white">¥{completion.money_earned.toLocaleString()}</p>
+              </div>
+              <div>
+                <p className="text-white/40 text-xs uppercase tracking-wider mb-1">经验</p>
+                <p className="text-2xl font-mono font-bold text-white">+{completion.xp_earned.toLocaleString()} XP</p>
+              </div>
+            </div>
+
+            <button
+              onClick={onBack}
+              className="w-full px-4 py-3 bg-white text-black rounded-lg hover:bg-white/90 transition-colors font-semibold"
+            >
+              返回地图
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Timetable Modal */}
       {showTimetable && (

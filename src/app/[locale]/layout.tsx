@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "../globals.css";
 import { AuthProvider } from "../contexts/AuthContext";
 import { PlayerProvider } from "../contexts/PlayerContext";
+import { ToastProvider } from "../contexts/ToastContext";
 import {NextIntlClientProvider} from 'next-intl';
 import {getMessages} from 'next-intl/server';
 import {setRequestLocale} from 'next-intl/server';
@@ -54,7 +55,9 @@ export default async function RootLayout({
         <NextIntlClientProvider messages={messages}>
           <AuthProvider>
             <PlayerProvider>
-              {children}
+              <ToastProvider>
+                {children}
+              </ToastProvider>
             </PlayerProvider>
           </AuthProvider>
         </NextIntlClientProvider>

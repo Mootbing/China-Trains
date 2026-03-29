@@ -113,6 +113,49 @@ export const formatTime = (hours: number): string => {
 };
 
 /**
+ * Calculate rewards for completing a route
+ */
+export const calculateRouteRewards = (
+  distanceKm: number,
+  vehicles: Vehicle[],
+  startStationLevel: number = 1,
+  endStationLevel: number = 1
+): { money: number; xp: number } => {
+  const passengerCars = vehicles.filter(v =>
+    !v.max_speed && ['passenger', 'YZ', 'RZ', 'YW', 'RW', 'GRW'].some(t =>
+      v.type === t || v.model?.startsWith(t)
+    )
+  ).length;
+  const freightCars = vehicles.filter(v =>
+    !v.max_speed && ['freight', 'F', 'S', 'E', 'T', 'Z', 'U'].some(t =>
+      v.type === t || v.model?.startsWith(t)
+    )
+  ).length;
+
+  // Station level bonus: average of start and end station levels
+  const levelBonusMap: Record<number, number> = { 1: 1.0, 2: 1.1, 3: 1.25, 4: 1.5, 5: 2.0 };
+  const startBonus = levelBonusMap[startStationLevel] || 1.0;
+  const endBonus = levelBonusMap[endStationLevel] || 1.0;
+  const stationBonus = (startBonus + endBonus) / 2;
+
+  const carMultiplier = 1 + (passengerCars * 0.1) + (freightCars * 0.05);
+
+  const money = Math.round(distanceKm * 5 * carMultiplier * stationBonus);
+  const xp = Math.round(distanceKm * 2);
+
+  return { money, xp };
+};
+
+/**
+ * Calculate operating cost for dispatching a route
+ */
+export const calculateOperatingCost = (distanceKm: number, vehicles: Vehicle[]): number => {
+  const locoCount = vehicles.filter(v => v.max_speed).length;
+  const carCount = vehicles.filter(v => !v.max_speed).length;
+  return Math.round(distanceKm * (locoCount * 2 + carCount * 0.5));
+};
+
+/**
  * Calculate train's current position along route based on time elapsed
  */
 export const calculateTrainPosition = (

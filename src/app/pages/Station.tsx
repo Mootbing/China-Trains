@@ -9,6 +9,7 @@ import locomotives from '../../../public/assets/data/locomotives.json';
 import cars from '../../../public/assets/data/cars.json';
 import { Locomotive as LocomotiveType, Car } from '../utils/dataLoader';
 import { TrainMetrics, calculateTrainMetrics as calcMetrics } from '../utils/route-utils';
+import { usePlayer } from '../contexts/PlayerContext';
 
 interface VehicleFromDB {
   id: string;
@@ -42,17 +43,36 @@ interface DragPayload {
   trainItem?: LocomotiveType | Car; // the actual consist item
 }
 
-export default function StationPage({ station, onBack, onDispatch }: {
+const UPGRADE_COSTS: Record<number, number> = {
+  2: 15000,
+  3: 40000,
+  4: 100000,
+  5: 250000,
+};
+
+const UPGRADE_LEVEL_REQUIREMENTS: Record<number, number> = {
+  2: 2,
+  3: 5,
+  4: 10,
+  5: 15,
+};
+
+export default function StationPage({ station: initialStation, onBack, onDispatch }: {
   station: Station;
   onBack?: () => void;
   onDispatch?: (startingStation: Station, vehicleIds?: number[], trainMetrics?: TrainMetrics) => void;
 }) {
+  const { player } = usePlayer();
+  const [station, setStation] = useState<Station>(initialStation);
   const [groupedVehicles, setGroupedVehicles] = useState<GroupedVehicle[]>([]);
   const [showArrivalBoard, setShowArrivalBoard] = useState(false);
   const [availableCounts, setAvailableCounts] = useState<Record<string, number>>({});
   const [availableDatabaseIds, setAvailableDatabaseIds] = useState<Record<string, string[]>>({});
   const [trainConsist, setTrainConsist] = useState<(LocomotiveType | Car)[]>([]);
   const [isLoadingVehicles, setIsLoadingVehicles] = useState(true);
+  const [isUpgrading, setIsUpgrading] = useState(false);
+  const [demands, setDemands] = useState<any[]>([]);
+  const [isLoadingDemands, setIsLoadingDemands] = useState(false);
 
   // --- Drag-and-drop state ---
   const [dragPayload, setDragPayload] = useState<DragPayload | null>(null);
@@ -65,6 +85,11 @@ export default function StationPage({ station, onBack, onDispatch }: {
   // Refs for drop zone hit-testing
   const trackZoneRef = useRef<HTMLDivElement>(null);
   const depotZoneRef = useRef<HTMLDivElement>(null);
+
+  // Sync station state when prop changes
+  useEffect(() => {
+    setStation(initialStation);
+  }, [initialStation]);
 
   // Calculate train performance metrics using shared utility
   const trainMetrics = calcMetrics(trainConsist as any[]);
@@ -142,6 +167,27 @@ export default function StationPage({ station, onBack, onDispatch }: {
         }
       };
       fetchVehicles();
+    }
+  }, [station]);
+
+  // Fetch demands for this station
+  useEffect(() => {
+    if (station) {
+      const fetchDemands = async () => {
+        try {
+          setIsLoadingDemands(true);
+          const response = await fetch(`/api/stations/${station.id}/demands`);
+          if (response.ok) {
+            const data = await response.json();
+            setDemands(data.demands || []);
+          }
+        } catch (error) {
+          console.error('Error fetching demands:', error);
+        } finally {
+          setIsLoadingDemands(false);
+        }
+      };
+      fetchDemands();
     }
   }, [station]);
 
@@ -299,6 +345,38 @@ export default function StationPage({ station, onBack, onDispatch }: {
   // Determine ghost image
   const ghostImage = dragPayload?.vehicle?.image || (dragPayload?.trainItem as any)?.image;
 
+  // Station upgrade handler
+  const handleUpgrade = async () => {
+    if (isUpgrading || station.level >= 5) return;
+
+    const nextLevel = station.level + 1;
+    const cost = UPGRADE_COSTS[nextLevel];
+    if (!cost) return;
+
+    setIsUpgrading(true);
+    try {
+      const response = await fetch(`/api/stations/${station.id}/upgrade`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        setStation(prev => ({ ...prev, level: data.newLevel }));
+      } else {
+        console.error('Upgrade failed:', data.error);
+      }
+    } catch (error) {
+      console.error('Error upgrading station:', error);
+    }
+    setIsUpgrading(false);
+  };
+
+  const nextUpgradeCost = station.level < 5 ? UPGRADE_COSTS[station.level + 1] : null;
+  const nextUpgradeRequiredLevel = station.level < 5 ? UPGRADE_LEVEL_REQUIREMENTS[station.level + 1] : null;
+  const canUpgradeLevel = nextUpgradeRequiredLevel ? player.level >= nextUpgradeRequiredLevel : false;
+
   return (
     <div
       className='relative overflow-hidden h-screen bg-black select-none'
@@ -354,7 +432,26 @@ export default function StationPage({ station, onBack, onDispatch }: {
         <h1 className="text-xl font-bold text-center">
           {station.loc_name || station.name}站
         </h1>
-        <p className="text-sm text-gray-300 text-center">{station.level}等站</p>
+        <div className="flex items-center justify-center gap-2 mt-0.5">
+          <p className="text-sm text-gray-300">{station.level}等站</p>
+          {station.level < 5 && nextUpgradeCost && (
+            <button
+              onClick={handleUpgrade}
+              disabled={isUpgrading || !canUpgradeLevel}
+              className={`text-[10px] px-2 py-0.5 border border-white/30 rounded transition-colors disabled:opacity-50 ${
+                canUpgradeLevel ? 'hover:bg-white/10' : 'cursor-not-allowed'
+              }`}
+              title={!canUpgradeLevel ? `需要等级 ${nextUpgradeRequiredLevel}` : undefined}
+            >
+              {isUpgrading ? '...' : !canUpgradeLevel
+                ? `需要等级 ${nextUpgradeRequiredLevel}`
+                : `升级 ¥${nextUpgradeCost.toLocaleString()}`}
+            </button>
+          )}
+          {station.level >= 5 && (
+            <span className="text-[10px] text-white/40 px-2 py-0.5">MAX</span>
+          )}
+        </div>
 
         {trainMetrics.maxWeight > 0 && (
           <div className="flex justify-center gap-4 mt-2 pt-2 border-t border-white/20">
@@ -377,6 +474,37 @@ export default function StationPage({ station, onBack, onDispatch }: {
           </div>
         )}
       </div>
+
+      {/* Demand Cards */}
+      {demands.length > 0 && (
+        <div className="absolute top-24 left-4 z-10 flex flex-col gap-2 max-w-xs">
+          <div className="text-white/50 text-xs font-medium mb-0.5">需求</div>
+          {demands.map((demand: any) => (
+            <button
+              key={demand.id}
+              className="bg-white/5 border border-white/20 rounded-lg px-3 py-2 text-left hover:bg-white/10 transition-colors"
+              onClick={() => {
+                // Pre-fill dispatch by triggering dispatch mode if onDispatch is available
+                // For now just show info
+              }}
+            >
+              <div className="text-white text-xs font-medium">
+                {demand.demand_type === 'passenger'
+                  ? `${demand.quantity} 名旅客`
+                  : `${demand.quantity}t 货物`}
+                <span className="text-white/50"> → </span>
+                <span className="text-white/80">{demand.destination_name}</span>
+              </div>
+              <div className="text-[10px] text-white/40 mt-0.5">
+                {demand.reward_multiplier}x 奖励
+                <span className="ml-2">
+                  {new Date(demand.expires_at).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })} 到期
+                </span>
+              </div>
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Track drop zone — vehicles dragged here get added to train */}
       <div

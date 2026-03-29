@@ -10,9 +10,12 @@ import Dock from '../components/Dock';
 import DockButton from '../components/DockButton';
 import ArrivalBoard from '../components/ArrivalBoard';
 import StationBoard from '../components/StationBoard';
+import ShopBoard from '../components/ShopBoard';
+import AchievementsBoard from '../components/AchievementsBoard';
 import StationPurchaseModal from '../components/StationPurchaseModal';
 import TrainDashboard from '../components/TrainDashboard';
-import { calculateDistance, formatTime } from '../utils/route-utils';
+import { calculateDistance, calculateOperatingCost, formatTime, Vehicle } from '../utils/route-utils';
+import { useToast } from '../contexts/ToastContext';
 
 interface PendingStation {
   placeName: string;
@@ -26,7 +29,8 @@ export default function Map() {
   const [map, setMap] = useState<L.Map | null>(null);
   const [userStations, setUserStations] = useState<Station[]>([]);
   const { signOut } = useAuth();
-  const { player, addMoney } = usePlayer();
+  const { player, addMoney, addXP } = usePlayer();
+  const { showToast } = useToast();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -57,6 +61,10 @@ export default function Map() {
   const [showArrivalBoard, setShowArrivalBoard] = useState(false);
   const [showStationBoard, setShowStationBoard] = useState(false);
   const [showTrainDashboard, setShowTrainDashboard] = useState(false);
+  const [showShop, setShowShop] = useState(false);
+  const [showAchievements, setShowAchievements] = useState(false);
+  const [savedRoutes, setSavedRoutes] = useState<any[]>([]);
+  const [showSavedRoutes, setShowSavedRoutes] = useState(false);
 
   const handleLogout = async () => {
     try {
@@ -192,12 +200,12 @@ export default function Map() {
       const { exists, station, error } = await stationUtils.checkStation(placeName);
       
       if (error) {
-        alert(`Error checking station: ${error}`);
+        showToast(`Error checking station: ${error}`, 'error');
         return;
       }
 
       if (exists && station) {
-        alert(`You already own a Level ${station.level} station at ${station.loc_name || station.name}!`);
+        showToast(`You already own a Level ${station.level} station at ${station.loc_name || station.name}!`, 'info');
         return;
       }
 
@@ -208,7 +216,7 @@ export default function Map() {
       setPurchaseSuccess(undefined);
     } catch (error) {
       console.error('Error handling location click:', error);
-      alert('An error occurred while processing your request.');
+      showToast('An error occurred while processing your request.', 'error');
     }
   };
 
@@ -230,7 +238,7 @@ export default function Map() {
         );
 
       if (createError) {
-        alert(`Failed to create station: ${createError}`);
+        showToast(`Failed to create station: ${createError}`, 'error');
         setIsPurchasing(false);
         return;
       }
@@ -261,7 +269,7 @@ export default function Map() {
       }
     } catch (error) {
       console.error('Error confirming purchase:', error);
-      alert('An error occurred while processing your purchase.');
+      showToast('An error occurred while processing your purchase.', 'error');
       setIsPurchasing(false);
     }
   };
@@ -318,6 +326,102 @@ export default function Map() {
     setShowTrainDashboard(false);
   };
 
+  const handleShowShop = () => {
+    setShowShop(true);
+  };
+
+  const handleCloseShop = () => {
+    setShowShop(false);
+  };
+
+  const handleShowAchievements = () => {
+    setShowAchievements(true);
+  };
+
+  const handleCloseAchievements = () => {
+    setShowAchievements(false);
+  };
+
+  const handleSaveRoute = async () => {
+    if (!startStation || selectedRoute.length === 0) return;
+    const allStationIds = [startStation.id, ...selectedRoute.map(s => s.id)];
+    const endStation = selectedRoute[selectedRoute.length - 1];
+    const routeName = `${startStation.loc_name || startStation.name} → ${endStation.loc_name || endStation.name}`;
+
+    try {
+      const response = await fetch('/api/routes/saved', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: routeName,
+          allStationIds,
+          startStationId: startStation.id,
+          endStationId: endStation.id,
+        }),
+      });
+      if (response.ok) {
+        showToast('路线已保存', 'success');
+      } else {
+        const data = await response.json();
+        showToast(`保存失败: ${data.error}`, 'error');
+      }
+    } catch {
+      showToast('保存路线时发生错误', 'error');
+    }
+  };
+
+  const loadSavedRoutes = async () => {
+    try {
+      const response = await fetch('/api/routes/saved');
+      if (response.ok) {
+        const data = await response.json();
+        setSavedRoutes(data.savedRoutes || []);
+      }
+    } catch (error) {
+      console.error('Error loading saved routes:', error);
+    }
+  };
+
+  const handleLoadRoute = async (saved: any) => {
+    // Load a saved route into the dispatch: set selectedRoute from saved station IDs
+    const stationIds: string[] = saved.all_station_ids || [];
+    if (stationIds.length < 2) return;
+
+    // The first station in saved route should match startStation or we use it
+    const matchedStations: Station[] = [];
+    for (const id of stationIds.slice(1)) {
+      const found = userStations.find(s => s.id === id);
+      if (found) matchedStations.push(found);
+    }
+
+    if (matchedStations.length > 0) {
+      setSelectedRoute(matchedStations);
+      setShowSavedRoutes(false);
+      showToast('路线已加载', 'success');
+    } else {
+      showToast('无法加载: 车站数据不匹配', 'error');
+    }
+  };
+
+  const handleDeleteSavedRoute = async (id: string) => {
+    try {
+      const response = await fetch(`/api/routes/saved/${id}`, { method: 'DELETE' });
+      if (response.ok) {
+        setSavedRoutes(prev => prev.filter(r => r.id !== id));
+        showToast('路线已删除', 'success');
+      }
+    } catch {
+      showToast('删除失败', 'error');
+    }
+  };
+
+  const handleToggleSavedRoutes = async () => {
+    if (!showSavedRoutes) {
+      await loadSavedRoutes();
+    }
+    setShowSavedRoutes(prev => !prev);
+  };
+
   const handleSelectStation = (stationId: string) => {
     router.push(`/station/${stationId}`);
   };
@@ -334,7 +438,7 @@ export default function Map() {
 
   const handleSendoffTrain = async () => {
     if (!startStation || selectedRoute.length === 0 || vehicleIds.length === 0) {
-      alert('请确保选择了起始站、路线和车辆');
+      showToast('请确保选择了起始站、路线和车辆', 'error');
       return;
     }
 
@@ -374,11 +478,11 @@ export default function Map() {
       } else {
         const error = await response.json();
         console.error('Dispatch failed:', error);
-        alert(`发车失败: ${error.error}`);
+        showToast(`发车失败: ${error.error}`, 'error');
       }
     } catch (error) {
       console.error('Error sending off train:', error);
-      alert('发车时发生错误');
+      showToast('发车时发生错误', 'error');
     }
   };
 
@@ -402,7 +506,7 @@ export default function Map() {
   // Calculate journey metrics
   const calculateJourneyMetrics = () => {
     if (!startStation || selectedRoute.length === 0 || !trainMetrics) {
-      return { totalDistance: 0, estimatedTime: 0, effectiveSpeed: 0 };
+      return { totalDistance: 0, estimatedTime: 0, effectiveSpeed: 0, operatingCost: 0 };
     }
 
     const allStations = [startStation, ...selectedRoute];
@@ -412,7 +516,7 @@ export default function Map() {
     for (let i = 0; i < allStations.length - 1; i++) {
       const current = allStations[i];
       const next = allStations[i + 1];
-      
+
       if (current.latitude && current.longitude && next.latitude && next.longitude) {
         const segmentDistance = calculateDistance(
           current.latitude, current.longitude,
@@ -426,7 +530,21 @@ export default function Map() {
     const effectiveSpeed = trainMetrics.effectiveSpeed;
     const estimatedTime = effectiveSpeed > 0 ? totalDistance / effectiveSpeed : 0; // Time in hours
 
-    return { totalDistance, estimatedTime, effectiveSpeed };
+    // Estimate operating cost: we know loco count from maxSpeed > 0 and car count from the rest
+    // trainMetrics has maxWeight > 0 only if there are locomotives
+    // We use a simple heuristic: total vehicles = vehicleIds.length
+    // locos are ones with maxSpeed, cars are the rest
+    // But we don't have vehicle details here, so we use the dispatch API formula:
+    // cost = distance * (loco_count * 2 + car_count * 0.5)
+    // We can estimate loco/car counts from vehicleIds if we had the data,
+    // but for now approximate: if maxWeight > 0 there's at least 1 loco
+    const totalVehicles = vehicleIds.length;
+    // Rough estimate: vehicles contributing to maxWeight are locos
+    const locoCount = trainMetrics.maxWeight > 0 ? Math.max(1, Math.round(totalVehicles * 0.3)) : 0;
+    const carCount = totalVehicles - locoCount;
+    const operatingCost = Math.round(totalDistance * (locoCount * 2 + carCount * 0.5));
+
+    return { totalDistance, estimatedTime, effectiveSpeed, operatingCost };
   };
 
   // Function to draw route lines between connected stations
@@ -593,21 +711,42 @@ export default function Map() {
     if (!map || isDispatching) return;
 
     try {
-      
       // Clear existing route visualizations
       clearExistingRouteLines();
       clearTrainMarkers();
-      
+
       // Reload fresh route data
       const routes = await loadUserRoutes();
-      
-      if (routes && routes.length > 0 && userStations.length > 0) {
-        // Redraw route lines
-        drawExistingRouteLines(routes, userStations);
-        
-        // Display train markers
-        displayTrainMarkers(routes);
-        
+
+      // Auto-complete routes that are >= 100%
+      if (routes) {
+        for (const route of routes) {
+          if (route.percent_completion >= 100 && !route.completed) {
+            try {
+              const res = await fetch(`/api/routes/${route.id}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'complete' }),
+              });
+              if (res.ok) {
+                const data = await res.json();
+                addMoney(data.money_earned);
+                addXP(data.xp_earned);
+                showToast(`列车到达 ${data.end_station}! +¥${data.money_earned.toLocaleString()} +${data.xp_earned} XP`, 'success');
+              }
+            } catch {
+              // Will retry next refresh
+            }
+          }
+        }
+      }
+
+      // Re-fetch after completions to get updated active routes
+      const activeRoutes = await loadUserRoutes();
+
+      if (activeRoutes && activeRoutes.length > 0 && userStations.length > 0) {
+        drawExistingRouteLines(activeRoutes, userStations);
+        displayTrainMarkers(activeRoutes);
       }
     } catch (error) {
       console.error('Error refreshing route data:', error);
@@ -651,11 +790,6 @@ export default function Map() {
             
             // Update URL to remove the dispatch parameter
             router.replace('/');
-            
-            // Show notification that dispatch was resumed
-            // setTimeout(() => {
-            //   alert(`已恢复从 ${dispatchData.startingStation.loc_name || dispatchData.startingStation.name} 的发车准备。请选择目的地站点。`);
-            // }, 500);
             
           } else {
             // Clear stale data
@@ -820,6 +954,8 @@ export default function Map() {
             <DockButton svgUrl="/assets/svgs/dock/routes.svg" label="线" onClick={handleShowArrivalBoard} />
             <DockButton svgUrl="/assets/svgs/dock/stations.svg" label="站" onClick={handleShowStationBoard} />
             <DockButton svgUrl="/assets/svgs/dock/trains.svg" label="库" onClick={handleShowTrainDashboard} />
+            <DockButton svgUrl="/assets/svgs/dock/routes.svg" label="店" onClick={handleShowShop} />
+            <DockButton svgUrl="/assets/svgs/dock/stations.svg" label="功" onClick={handleShowAchievements} />
             <DockButton svgUrl="/assets/svgs/dock/logout.svg" label="退" onClick={handleLogout} />
           </Dock>
         )}
@@ -831,7 +967,7 @@ export default function Map() {
         onClose={handleCloseModal}
         onConfirm={handleConfirmPurchase}
         stationName={pendingStation?.locName || pendingStation?.placeName || ''}
-        stationCost={10000}
+        stationCost={10000 + (userStations.length * 2000)}
         currentMoney={player.money}
         isPurchasing={isPurchasing}
         purchaseSuccess={purchaseSuccess}
@@ -857,6 +993,18 @@ export default function Map() {
       <TrainDashboard
         isOpen={showTrainDashboard}
         onClose={handleCloseTrainDashboard}
+      />
+
+      {/* Shop Board */}
+      <ShopBoard
+        isOpen={showShop}
+        onClose={handleCloseShop}
+      />
+
+      {/* Achievements Board */}
+      <AchievementsBoard
+        isOpen={showAchievements}
+        onClose={handleCloseAchievements}
       />
 
       {/* Dispatching Overlay */}
@@ -907,10 +1055,63 @@ export default function Map() {
                   </svg>
                   {formatTime(journeyMetrics.estimatedTime)}
                 </span>
+                <span className="flex items-center gap-1">
+                  <span className="text-[10px] font-bold">¥</span>
+                  {journeyMetrics.operatingCost.toLocaleString()}
+                </span>
               </div>
             </div>
           )}
           
+          {/* Save / Load Route Buttons */}
+          <div className="flex gap-2 mt-3">
+            {selectedRoute.length > 0 && (
+              <button
+                onClick={handleSaveRoute}
+                className="flex-1 bg-white/10 hover:bg-white/20 text-white px-3 py-1 rounded text-xs transition-colors border border-white/20"
+              >
+                保存路线
+              </button>
+            )}
+            <button
+              onClick={handleToggleSavedRoutes}
+              className="flex-1 bg-white/10 hover:bg-white/20 text-white px-3 py-1 rounded text-xs transition-colors border border-white/20"
+            >
+              加载路线
+            </button>
+          </div>
+
+          {/* Saved Routes Dropdown */}
+          {showSavedRoutes && (
+            <div className="mt-2 max-h-32 overflow-y-auto bg-black/80 border border-white/20 rounded">
+              {savedRoutes.length === 0 ? (
+                <p className="text-white/40 text-xs p-2 text-center">暂无保存的路线</p>
+              ) : (
+                savedRoutes.map((saved: any) => (
+                  <div
+                    key={saved.id}
+                    className="flex items-center justify-between px-2 py-1.5 hover:bg-white/10 transition-colors border-b border-white/10 last:border-b-0"
+                  >
+                    <button
+                      onClick={() => handleLoadRoute(saved)}
+                      className="flex-1 text-left text-xs text-white/80 truncate"
+                    >
+                      {saved.name}
+                    </button>
+                    <button
+                      onClick={() => handleDeleteSavedRoute(saved.id)}
+                      className="ml-2 text-white/30 hover:text-white/70 transition-colors flex-shrink-0"
+                    >
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+          )}
+
           <div className="flex gap-2 mt-3">
             <button
               onClick={handleCancelDispatch}

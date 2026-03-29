@@ -4,8 +4,10 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import locomotives from '../../../public/assets/data/locomotives.json';
 import cars from '../../../public/assets/data/cars.json';
+import shopData from '../../../public/assets/data/shop.json';
 import { stationUtils, Station } from '../utils/stations';
 import { useBoardAnimation } from '../hooks/useBoardAnimation';
+import { useToast } from '../contexts/ToastContext';
 
 interface VehicleFromDB {
   id: string;
@@ -56,7 +58,9 @@ export default function TrainDashboard({ isOpen, onClose }: TrainDashboardProps)
   const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
   const [typeFilter, setTypeFilter] = useState<'all' | 'locomotive' | 'car'>('all');
   const [stations, setStations] = useState<Station[]>([]);
+  const [sellingId, setSellingId] = useState<string | null>(null);
   const router = useRouter();
+  const { showToast } = useToast();
 
   useEffect(() => {
     if (isOpen) {
@@ -258,6 +262,41 @@ export default function TrainDashboard({ isOpen, onClose }: TrainDashboardProps)
     }
   };
 
+  const getSellPrice = (model: string): number => {
+    const shopEntry = (shopData as any[]).find((item: any) => item.model === model);
+    return shopEntry ? Math.round(shopEntry.price * 0.5) : 500;
+  };
+
+  const handleSell = async (e: React.MouseEvent, vehicle: CombinedVehicleData) => {
+    e.stopPropagation();
+    const sellPrice = getSellPrice(vehicle.model);
+    const confirmed = window.confirm(
+      `确定要出售 ${vehicle.model} (${vehicle.serial_number}) 吗？\n售价: ¥${sellPrice.toLocaleString()}`
+    );
+    if (!confirmed) return;
+
+    setSellingId(vehicle.database_id);
+    try {
+      const response = await fetch(`/api/player/vehicles/${vehicle.database_id}/sell`, {
+        method: 'POST',
+      });
+      if (response.ok) {
+        const data = await response.json();
+        showToast(`已出售 ${data.model} +¥${data.sell_price.toLocaleString()}`, 'success');
+        // Refresh the vehicle list
+        await fetchStationsAndVehicles();
+      } else {
+        const err = await response.json();
+        showToast(err.error || '出售失败', 'error');
+      }
+    } catch (error) {
+      console.error('Sell error:', error);
+      showToast('出售失败', 'error');
+    } finally {
+      setSellingId(null);
+    }
+  };
+
   if (!mounted) return null;
 
   return (
@@ -356,7 +395,7 @@ export default function TrainDashboard({ isOpen, onClose }: TrainDashboardProps)
           ) : (
             <div className="space-y-3">
               {/* Table Header */}
-              <div className="grid grid-cols-11 gap-4 py-2 px-4 bg-white/5 rounded-lg text-sm font-medium text-white/80">
+              <div className="grid grid-cols-12 gap-4 py-2 px-4 bg-white/5 rounded-lg text-sm font-medium text-white/80">
                 <button
                   onClick={() => handleSort('model')}
                   className="col-span-2 flex items-center gap-2 hover:text-white transition-colors text-left"
@@ -381,6 +420,7 @@ export default function TrainDashboard({ isOpen, onClose }: TrainDashboardProps)
                 <div className="col-span-2">名称</div>
                 <div className="col-span-2">规格</div>
                 <div className="col-span-2">位置</div>
+                <div className="col-span-1">操作</div>
               </div>
 
               {/* Vehicle Rows */}
@@ -411,13 +451,13 @@ export default function TrainDashboard({ isOpen, onClose }: TrainDashboardProps)
                   </div>
                   
                   {/* Stats Row */}
-                  <div className="grid grid-cols-11 gap-4 py-3 px-4">
+                  <div className="grid grid-cols-12 gap-4 py-3 px-4">
                     <div className="col-span-2 text-white font-medium">{vehicle.model}</div>
                     <div className="col-span-2 text-white/70 font-mono text-sm">{vehicle.serial_number}</div>
                     <div className="col-span-1">
                       <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                        vehicle.vehicle_type === 'locomotive' 
-                          ? 'text-blue-400' 
+                        vehicle.vehicle_type === 'locomotive'
+                          ? 'text-blue-400'
                           : 'text-green-400'
                       }`}>
                         {vehicle.vehicle_type === 'locomotive' ? '机车' : '车厢'}
@@ -468,6 +508,18 @@ export default function TrainDashboard({ isOpen, onClose }: TrainDashboardProps)
                         </div>
                       ) : (
                         <span className="text-gray-400">位置未知</span>
+                      )}
+                    </div>
+                    <div className="col-span-1 flex items-center">
+                      {vehicle.station_id && !vehicle.route_id && (
+                        <button
+                          onClick={(e) => handleSell(e, vehicle)}
+                          disabled={sellingId === vehicle.database_id}
+                          title={`售价: ¥${getSellPrice(vehicle.model).toLocaleString()}`}
+                          className="px-2 py-1 text-xs border border-white/30 rounded hover:bg-white/10 text-white/80 hover:text-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                        >
+                          {sellingId === vehicle.database_id ? '...' : '卖'}
+                        </button>
                       )}
                     </div>
                   </div>

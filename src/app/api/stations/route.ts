@@ -1,40 +1,10 @@
-import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
+import { createAuthenticatedClient } from '../../utils/supabase-server';
+import { checkAndAwardAchievements } from '../../utils/achievement-checker';
 
 export async function GET(request: NextRequest) {
   try {
-    const cookieStore = await cookies();
-    
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          getAll() {
-            return cookieStore.getAll();
-          },
-          setAll(cookiesToSet) {
-            try {
-              cookiesToSet.forEach(({ name, value, options }) =>
-                cookieStore.set(name, value, options)
-              );
-            } catch {
-              // The `setAll` method was called from a Server Component.
-              // This can be ignored if you have middleware refreshing
-              // user sessions.
-            }
-          },
-        },
-      }
-    );
-    
-    // Get the current user
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    
-    if (userError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const { supabase, user } = await createAuthenticatedClient();
 
     const { searchParams } = new URL(request.url);
     const stationId = searchParams.get('id');
@@ -52,7 +22,7 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ error: error.message }, { status: 500 });
       }
 
-      return NextResponse.json({ 
+      return NextResponse.json({
         exists: !!data,
         station: data || null
       });
@@ -68,14 +38,17 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ error: error.message }, { status: 500 });
       }
 
-      return NextResponse.json({ 
+      return NextResponse.json({
         stations: stations || []
       });
     }
-  } catch (error) {
+  } catch (error: any) {
+    if (error?.message === 'Unauthorized') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
     console.error('Get station error:', error);
     return NextResponse.json(
-      { error: 'Internal server error' }, 
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }
@@ -83,37 +56,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const cookieStore = await cookies();
-    
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          getAll() {
-            return cookieStore.getAll();
-          },
-          setAll(cookiesToSet) {
-            try {
-              cookiesToSet.forEach(({ name, value, options }) =>
-                cookieStore.set(name, value, options)
-              );
-            } catch {
-              // The `setAll` method was called from a Server Component.
-              // This can be ignored if you have middleware refreshing
-              // user sessions.
-            }
-          },
-        },
-      }
-    );
-    
-    // Get the current user
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    
-    if (userError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const { supabase, user } = await createAuthenticatedClient();
 
     const body = await request.json();
     const { name, loc_name, level = 1, latitude, longitude } = body;
@@ -139,7 +82,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Longitude must be between -180 and 180' }, { status: 400 });
     }
 
-    // Check if user has enough money (10,000 for level 1 station)
+    // Count existing stations for variable cost
+    const { data: existingStations, error: countError } = await supabase
+      .from('stations')
+      .select('id')
+      .eq('user_id', user.id);
+
+    if (countError) {
+      return NextResponse.json({ error: 'Failed to count stations' }, { status: 500 });
+    }
+
+    const stationCount = existingStations?.length || 0;
+    const stationCost = 10000 + (stationCount * 2000);
+
+    // Check if user has enough money
     const { data: playerData, error: playerError } = await supabase
       .from('users')
       .select('money')
@@ -150,9 +106,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to get player data' }, { status: 500 });
     }
 
-    const stationCost = 10000;
     if (playerData.money < stationCost) {
-      return NextResponse.json({ 
+      return NextResponse.json({
         error: 'Insufficient funds',
         required: stationCost,
         available: playerData.money
@@ -181,7 +136,7 @@ export async function POST(request: NextRequest) {
       .insert({
         user_id: user.id,
         name,
-        loc_name: loc_name || name, // Use loc_name if provided, otherwise use name
+        loc_name: loc_name || name,
         level,
         latitude,
         longitude,
@@ -205,17 +160,24 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to update player money' }, { status: 500 });
     }
 
-    return NextResponse.json({ 
+    // Check and award achievements after station creation
+    const newAchievements = await checkAndAwardAchievements(supabase, user.id);
+
+    return NextResponse.json({
       success: true,
       station: newStation,
       moneySpent: stationCost,
-      remainingMoney: playerData.money - stationCost
+      remainingMoney: playerData.money - stationCost,
+      new_achievements: newAchievements,
     });
-  } catch (error) {
+  } catch (error: any) {
+    if (error?.message === 'Unauthorized') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
     console.error('Create station error:', error);
     return NextResponse.json(
-      { error: 'Internal server error' }, 
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }
-} 
+}

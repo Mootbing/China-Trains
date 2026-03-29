@@ -30,6 +30,11 @@ body {
   z-index: 0;
 }
 
+/* Subtle fade-in for map tiles as they load */
+.leaflet-tile {
+  transition: opacity 0.3s ease-in;
+}
+
 /* Board panel animations */
 @keyframes board-backdrop-in {
   from { opacity: 0; }
