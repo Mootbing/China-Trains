@@ -1,0 +1,25 @@
+{
+  "Home": {
+    "loading": "Загрузка..."
+  },
+  "Login": {
+    "emailRequired": "Электронная почта и пароль не могут быть пустыми",
+    "passwordTooShort": "Пароль должен содержать не менее 6 символов",
+    "passwordsDoNotMatch": "Пароли не совпадают",
+    "signUpSuccess": "Регистрация прошла успешно!",
+    "signUpError": "Ошибка регистрации",
+    "signInError": "Ошибка входа",
+    "networkError": "Ошибка сети, попробуйте позже",
+    "signIn": "Войти",
+    "signUp": "Зарегистрироваться",
+    "emailLabel": "Электронная почта",
+    "passwordLabel": "Пароль",
+    "confirmPasswordLabel": "Подтвердите пароль",
+    "noAccount": "Нет аккаунта?",
+    "haveAccount": "Уже есть аккаунт?",
+    "signInButton": "Войти",
+    "signUpButton": "Зарегистрироваться",
+    "title": "Железные дороги Китая",
+    "subtitle": "CRH"
+  }
+}

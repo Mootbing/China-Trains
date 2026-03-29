@@ -27,8 +27,10 @@ export default function LocaleSwitcher() {
         disabled={isPending}
       >
         <option value="en">English</option>
-        <option value="es">Spanish</option>
-        <option value="zh">Chinese</option>
+        <option value="es">Español</option>
+        <option value="fr">Français</option>
+        <option value="ru">Русский</option>
+        <option value="zh">中文</option>
       </select>
     </label>
   );
